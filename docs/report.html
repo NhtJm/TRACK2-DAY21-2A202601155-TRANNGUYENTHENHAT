@@ -307,9 +307,9 @@
       <div class="milestones">
         <div class="m-row"><span class="mid">M1</span><span>MLflow 5+ lần chạy, chốt params tốt nhất</span><span class="pts">24đ</span><span class="badge ok">Hoàn thành</span></div>
         <div class="m-row"><span class="mid">M2</span><span>DVC push GCS + 3 unit test xanh</span><span class="pts">36đ</span><span class="badge ok">Hoàn thành</span></div>
-        <div class="m-row"><span class="mid">M3</span><span>CI 4 job + VM /predict hoạt động</span><span class="pts">68đ</span><span class="badge pending">Đang chạy</span></div>
-        <div class="m-row"><span class="mid">M4</span><span>Demo eval gate + Bước 3 continuous training</span><span class="pts">80đ</span><span class="badge pending">Đang chạy</span></div>
-        <div class="m-row"><span class="mid">M5</span><span>5 bonus hoàn thành</span><span class="pts">100đ</span><span class="badge pending">Đang chạy</span></div>
+        <div class="m-row"><span class="mid">M3</span><span>CI 4 job + VM /predict hoạt động</span><span class="pts">68đ</span><span class="badge ok">Hoàn thành</span></div>
+        <div class="m-row"><span class="mid">M4</span><span>Demo eval gate + Bước 3 continuous training</span><span class="pts">80đ</span><span class="badge ok">Hoàn thành</span></div>
+        <div class="m-row"><span class="mid">M5</span><span>5 bonus hoàn thành</span><span class="pts">100đ</span><span class="badge pending">Chờ DagsHub token (Bonus 1)</span></div>
         <div class="m-row"><span class="mid">M6</span><span>Báo cáo HTML + BAO-CAO.md + dọn hạ tầng</span><span class="pts">—</span><span class="badge pending">Đang chạy</span></div>
       </div>
     </section>
@@ -575,28 +575,73 @@ HTTP_STATUS=400   # sai so luong dac trung -> tu choi dung cach</pre>
       </div>
       <div class="pending-note">Job Deploy thật trên VM public IP (qua CI, dùng <code>VM_SSH_KEY</code> riêng cho GitHub Actions) đang chờ vòng CI đầu tiên — xem cập nhật ở mục kế tiếp.</div>
 
-      <h3>2D · Pipeline CI/CD 4 job</h3>
-      <div class="pending-note">Đang chờ quyền <code>workflow</code> trên token GitHub CLI để push <code>.github/workflows/mlops.yml</code> đã điền đầy đủ 8 TODO (+ hook Bonus 1, Bonus 4). Log thật của 4 job (<code>gh run view --log</code>) sẽ được chèn vào đây ngay khi có.</div>
-      <p class="prose-wide"><strong>Dự kiến trung thực:</strong> vòng CI đầu tiên chạy trên <code>train_phase1.csv</code> (2998 mẫu) — accuracy tốt nhất đo được ở Bước 1 là <strong>0.682</strong>, dưới ngưỡng 0.70. Do đó job <strong>Eval nhiều khả năng FAIL đúng theo thiết kế</strong>, Deploy sẽ bị <code>skip</code>. Đây không phải lỗi cấu hình — mục 09 (nhật ký sự cố) và mục 07 (Bước 3) giải thích đầy đủ và cho thấy accuracy vượt ngưỡng ngay khi có thêm dữ liệu.</p>
+      <h3>2D · Pipeline CI/CD 4 job <span class="badge ok">Chạy thật, đúng dự kiến</span></h3>
+      <p class="prose-wide">Vòng CI đầu tiên (<a href="https://github.com/NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/actions/runs/32502009731">run #32502009731</a>) chạy trên <code>train_phase1.csv</code> (2998 mẫu):</p>
+      <div class="term">
+        <div class="ttl">docs/logs/06-ci-run-1.log (trích, gh run view --log)</div>
+        <pre>✓ Unit Test in 1m5s
+✓ Train in 1m10s
+    Train model → Accuracy: 0.6820 | F1: 0.6811
+    Compare with previous deployed model (Bonus 4) → Chua co model nao tren GCS.
+      Model moi: accuracy=0.6820 -> cho phep deploy. (should_deploy=True)
+    Upload model to Cloud Storage → OK (models/latest/model.pkl, models/latest/metrics.json)
+X Eval in 4s
+    FAILED: accuracy 0.6820 < 0.7000. Huy deploy.
+##[error]Process completed with exit code 1.
+- Deploy  (skipped)</pre>
+      </div>
+      <p class="prose-wide">Đúng như phân tích ở mục 04: model tốt nhất Bước 1 (0.682) không đạt ngưỡng 0.70 → job Eval chặn Deploy <strong>đúng thiết kế</strong>, không phải lỗi. Model và metrics vẫn được Train upload lên GCS (Upload không phụ thuộc Eval) để làm mốc so sánh cho Bonus 4 ở vòng chạy kế tiếp.</p>
     </section>
 
     <section id="gate-demo">
-      <div class="sect-head"><span class="sect-num">06</span><h2>Demo eval gate chặn deploy</h2><span class="badge pending">Chờ CI</span></div>
+      <div class="sect-head"><span class="sect-num">06</span><h2>Demo eval gate chặn deploy</h2><span class="badge ok">Hoàn thành</span></div>
       <p class="sect-intro">Ngoài lần chặn "tự nhiên" ở mục 05, đề bài yêu cầu một minh chứng chủ động: trigger <code>workflow_dispatch</code> trên nhánh <code>demo/eval-gate-fail</code> với input <code>threshold=0.99</code> — cố tình đặt ngưỡng không thể đạt để xác nhận cơ chế gate hoạt động đúng, đồng thời giữ lịch sử nhánh <code>main</code> phản ánh đúng kết quả thật thay vì bị làm giả bằng một ngưỡng dễ.</p>
-      <div class="pending-note">Sẽ chèn log <code>gh run view --log</code> cho thấy Test ✅ · Train ✅ · Eval ❌ (<code>FAILED: accuracy ... &lt; 0.99</code>) · Deploy <code>skipped</code> ngay sau khi chạy được.</div>
+      <div class="term">
+        <div class="ttl">docs/logs/07-eval-gate-fail.log — run <a href="https://github.com/NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/actions/runs/32502307733">#32502307733</a> trên demo/eval-gate-fail, input threshold=0.99</div>
+        <pre>✓ Unit Test in 1m15s
+✓ Train in 1m18s
+X Eval in 3s
+    FAILED: accuracy 0.6820 < 0.9900. Huy deploy.
+- Deploy  (skipped)</pre>
+      </div>
+      <p class="prose-wide">Ngưỡng tuỳ chỉnh qua <code>github.event.inputs.threshold</code> hoạt động đúng — chứng minh cơ chế gate phản ứng với bất kỳ ngưỡng nào, không hard-code 0.70. Nhánh <code>main</code> không bị ảnh hưởng bởi lần chạy demo này.</p>
     </section>
 
     <section id="buoc3">
-      <div class="sect-head"><span class="sect-num">07</span><h2>Bước 3 — Continuous training</h2><span class="badge pending">Chờ CI</span></div>
-      <p class="sect-intro"><code>add_new_data.py</code> gộp <code>train_phase2.csv</code> vào <code>train_phase1.csv</code> (2998 → 5996 mẫu), commit chỉ file <code>.dvc</code>, <code>dvc push</code> <strong>trước</strong> <code>git push</code> (nếu ngược thứ tự, <code>dvc pull</code> trên CI sẽ fail vì object chưa có trên remote) — pipeline tự kích hoạt hoàn toàn không cần thao tác thủ công nào khác.</p>
+      <div class="sect-head"><span class="sect-num">07</span><h2>Bước 3 — Continuous training</h2><span class="badge ok">Hoàn thành — 4 job xanh</span></div>
+      <p class="sect-intro"><code>add_new_data.py</code> gộp <code>train_phase2.csv</code> vào <code>train_phase1.csv</code> (2998 → 5996 mẫu), commit chỉ file <code>.dvc</code>, <code>dvc push</code> <strong>trước</strong> <code>git push</code> (nếu ngược thứ tự, <code>dvc pull</code> trên CI sẽ fail vì object chưa có trên remote).</p>
 
-      <h3>Kiểm chứng trước (probe cục bộ)</h3>
-      <p class="prose-wide">Trước khi chạy chính thức, đã kiểm chứng cục bộ bằng cách train thử trên tập gộp 5996 mẫu (không commit, chỉ để biết trước kết quả):</p>
       <div class="term">
-        <div class="ttl">$ .venv/bin/python probe_merged.py (RF n_estimators=300, max_depth=null)</div>
-        <pre>Accuracy: 0.7460 | F1: 0.7449</pre>
+        <div class="ttl">docs/logs/09-ci-run-2.log — run <a href="https://github.com/NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/actions/runs/32502860254">#32502860254</a>, tất cả 4 job</div>
+        <pre>✓ Unit Test in 1m18s
+✓ Train in 1m10s
+    Train model → Accuracy: 0.7460 | F1: 0.7449
+    Compare with previous deployed model (Bonus 4) →
+      Model dang chay: accuracy=0.6820 | Model moi vua train: accuracy=0.7460
+      should_deploy=True
+    Upload model to Cloud Storage → OK
+✓ Eval in 2s
+    PASSED: accuracy 0.7460 >= 0.7000 va tot hon model cu. Dang trien khai model.
+✓ Deploy in 23s
+    sudo systemctl restart mlops-serve
+    out: Health check lan 2 chua san sang, thu lai...
+    out: {"status":"ok"}Health check passed.</pre>
       </div>
-      <p class="prose-wide">Nhiều dữ liệu hơn (gấp đôi) giúp mô hình khái quát tốt hơn, đẩy accuracy từ 0.682 lên <strong>0.746</strong> — vượt ngưỡng 0.70 một cách rõ ràng, xác nhận Bước 3 sẽ khiến Eval gate PASS và Deploy chạy thành công.</p>
+      <p class="prose-wide">Đây cũng là bằng chứng hữu cơ đầu tiên cho <strong>Bonus 4 (rollback an toàn)</strong> ở kịch bản (a): model mới (0.746) tốt hơn model cũ (0.682) trên GCS → cho phép deploy. Kịch bản (b) — model kém hơn bị chặn — xem mục 08.</p>
+
+      <p class="prose-wide">Xác nhận VM đang phục vụ model mới qua endpoint public thật:</p>
+      <div class="term">
+        <div class="ttl">docs/logs/08-curl-endpoints.log</div>
+        <pre>$ curl -s http://35.239.63.30:8000/health
+{"status":"ok"}
+
+$ curl -s -X POST http://35.239.63.30:8000/predict \
+  -d '{"features": [7.4, 0.70, 0.00, 1.9, 0.076, 11.0, 34.0, 0.9978, 3.51, 0.56, 9.4, 0]}'
+{"prediction":0,"label":"thap"}</pre>
+      </div>
+
+      <h3>Sự cố nhỏ trong quá trình chạy Bước 3</h3>
+      <p class="prose-wide">Push đầu tiên của commit dữ liệu <strong>không</strong> tự kích hoạt pipeline — phát hiện path filter <code>data/**.dvc</code> / <code>src/**.py</code> trong <code>on.push.paths</code> không khớp file nằm trực tiếp trong thư mục (không qua thư mục con) trên GitHub Actions. Đã sửa thành <code>data/**</code> / <code>src/**</code> và xác nhận lại bằng một push thật (cập nhật chú thích <code>params.yaml</code>, không dùng <code>workflow_dispatch</code>) — chi tiết ở mục 10 (nhật ký sự cố #6). Vòng chạy 4-job-xanh phía trên được kích hoạt thủ công để không phải chờ vòng vá lỗi thứ hai, nhưng nội dung (data, model, kết quả) hoàn toàn giống hệt vòng sẽ tự kích hoạt.</p>
 
       <h3>Bảng đối chiếu Bước 2 vs Bước 3</h3>
       <div class="scrollx">
@@ -604,14 +649,15 @@ HTTP_STATUS=400   # sai so luong dac trung -> tu choi dung cach</pre>
           <thead><tr><th></th><th>Bước 2 (train_phase1)</th><th>Bước 3 (train_phase1 + phase2)</th></tr></thead>
           <tbody>
             <tr><td>Số mẫu train</td><td class="num">2998</td><td class="num">5996</td></tr>
-            <tr><td>Accuracy (RF tốt nhất)</td><td class="num">0.682</td><td class="num">0.746</td></tr>
+            <tr><td>Accuracy</td><td class="num">0.682</td><td class="num">0.746</td></tr>
+            <tr><td>F1 (weighted)</td><td class="num">0.6811</td><td class="num">0.7449</td></tr>
             <tr><td>Vượt ngưỡng 0.70?</td><td><span class="badge fail">Không</span></td><td><span class="badge ok">Có</span></td></tr>
-            <tr><td>Job Deploy</td><td>Bị chặn bởi Eval gate</td><td class="badge pending">Chờ chạy thật</td></tr>
-            <tr><td>Kích hoạt bởi</td><td>push code lần đầu</td><td>commit dữ liệu (<code>*.dvc</code>) duy nhất</td></tr>
+            <tr><td>Job Eval</td><td><span class="badge fail">FAILED</span></td><td><span class="badge ok">PASSED</span></td></tr>
+            <tr><td>Job Deploy</td><td>Skipped (chặn đúng thiết kế)</td><td><span class="badge ok">Thành công (23s)</span></td></tr>
+            <tr><td>VM đang phục vụ</td><td>—</td><td>Model 0.746, xác nhận qua curl thật</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="pending-note">Log CI thật (<code>gh run view --log</code>) và xác nhận <code>curl /predict</code> phục vụ model mới trên VM sẽ được chèn vào đây sau khi chạy.</div>
     </section>
 
     <section id="bonus">
@@ -640,8 +686,8 @@ HTTP_STATUS=400   # sai so luong dac trung -> tu choi dung cach</pre>
         <div class="bonus-card">
           <span class="n">BONUS 4</span>
           <h4>Rollback an toàn</h4>
-          <span class="badge ok">Code hoàn thành</span> <span class="badge pending">Chờ demo CI</span>
-          <p>Step <code>rollback_check</code> đọc <code>metrics.json</code> cũ từ GCS <strong>trước</strong> khi job Train ghi đè — chỉ upload/deploy khi accuracy mới ≥ accuracy cũ. Kịch bản (a) tốt hơn → deploy và (b) kém hơn → chặn sẽ được minh hoạ bằng log CI thật.</p>
+          <span class="badge ok">Hoàn thành — cả 2 kịch bản</span>
+          <p>Step <code>rollback_check</code> đọc <code>metrics.json</code> cũ từ GCS <strong>trước</strong> khi job Train ghi đè — chỉ upload/deploy khi accuracy mới ≥ accuracy cũ. Cả kịch bản (a) tốt hơn → deploy và (b) kém hơn → chặn đều có log CI thật, xem bên dưới.</p>
         </div>
         <div class="bonus-card">
           <span class="n">BONUS 5</span>
@@ -650,6 +696,26 @@ HTTP_STATUS=400   # sai so luong dac trung -> tu choi dung cach</pre>
           <p>Dữ liệu thật (36/44/20%) không kích hoạt cảnh báo — đã tạo tập lệch riêng để minh chứng logic hoạt động đúng (xem log bên dưới).</p>
         </div>
       </div>
+
+      <h3>Bonus 4 — bằng chứng: 2 kịch bản rollback trên GitHub Actions</h3>
+      <div class="term">
+        <div class="ttl">docs/logs/09-ci-run-2.log — kịch bản (a): model mới tốt hơn → deploy (main, run tự nhiên)</div>
+        <pre>Model dang chay: accuracy=0.6820 | Model moi vua train: accuracy=0.7460
+should_deploy=True
+→ Upload model to Cloud Storage: OK
+→ Eval: PASSED: accuracy 0.7460 >= 0.7000 va tot hon model cu. Dang trien khai model.
+→ Deploy: thành công, health check OK</pre>
+      </div>
+      <div class="term">
+        <div class="ttl">docs/logs/10-bonus-4-rollback-block.log — kịch bản (b): model mới kém hơn → chặn (nhánh demo/rollback-block, threshold=0.50)</div>
+        <pre>Model dang chay: accuracy=0.7460 | Model moi vua train: accuracy=0.6240
+should_deploy=False
+→ Upload model to Cloud Storage: bị SKIP (điều kiện if: should_deploy == 'true')
+→ Eval: BLOCKED: accuracy 0.6240 >= nguong 0.5000 nhung khong tot hon model dang chay
+        (Bonus 4 rollback safety). Huy deploy.
+→ Deploy: skipped</pre>
+      </div>
+      <p style="font-size:0.85rem; color:var(--ink-muted);">Threshold hạ xuống 0.50 riêng cho demo (b) để tách bạch: model 0.624 vẫn vượt threshold nhưng vẫn bị chặn — chứng minh chính rollback safety là nguyên nhân, không phải trùng với eval gate thông thường. Model đang chạy thật trên VM (0.746) không bị ảnh hưởng vì bước Upload bị skip.</p>
 
       <h3>Bonus 5 — bằng chứng: dữ liệu thật vs dữ liệu lệch</h3>
       <div class="term">
@@ -677,14 +743,14 @@ Accuracy: 0.6060 | F1: 0.5465</pre>
             <tr><td>Bước 1 — Đủ accuracy + f1_score mỗi run</td><td class="num">8</td><td><span class="badge ok">Đạt</span></td><td><code>docs/logs/02-mlflow-runs.log</code></td></tr>
             <tr><td>Bước 1 — Phân tích params tốt nhất</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td>§04 phân tích + <code>BAO-CAO.md</code></td></tr>
             <tr><td>Bước 2 — DVC remote + push</td><td class="num">12</td><td><span class="badge ok">Đạt</span></td><td>§05, <code>03-gcs-dvc.log</code></td></tr>
-            <tr><td>Bước 2 — 4 job CI xanh</td><td class="num">16</td><td><span class="badge pending">Chờ CI</span></td><td>Chờ push (scope <code>workflow</code>) — xem §10 sự cố #2</td></tr>
-            <tr><td>Bước 2 — Eval gate chặn deploy</td><td class="num">4</td><td><span class="badge pending">Chờ CI</span></td><td>Kỳ vọng đạt tự nhiên ở vòng đầu (acc 0.682 &lt; 0.70) + demo §06</td></tr>
-            <tr><td>Bước 2 — VM /predict đúng</td><td class="num">12</td><td><span class="badge ok">Đạt cục bộ</span> <span class="badge pending">Chờ CI deploy</span></td><td>§05, <code>08-curl-endpoints.log</code></td></tr>
-            <tr><td>Bước 3 — Commit dữ liệu tự kích hoạt pipeline</td><td class="num">12</td><td><span class="badge pending">Chờ CI</span></td><td>§07, probe accuracy 0.746</td></tr>
+            <tr><td>Bước 2 — 4 job CI xanh</td><td class="num">16</td><td><span class="badge ok">Đạt</span></td><td>run #32502860254, §05/§07, <code>06-ci-run-1.log</code></td></tr>
+            <tr><td>Bước 2 — Eval gate chặn deploy</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td>Chặn tự nhiên (acc 0.682&lt;0.70) §05 + demo threshold=0.99 §06</td></tr>
+            <tr><td>Bước 2 — VM /predict đúng</td><td class="num">12</td><td><span class="badge ok">Đạt</span></td><td>§07, curl VM public IP thật, <code>08-curl-endpoints.log</code></td></tr>
+            <tr><td>Bước 3 — Commit dữ liệu tự kích hoạt pipeline</td><td class="num">12</td><td><span class="badge ok">Đạt (nội dung)</span> <span class="badge pending">Auto-trigger chưa xác minh</span></td><td>§07, run #32502860254 (acc 0.746, 4 job xanh) — kích hoạt qua <code>workflow_dispatch</code> do sự cố push trigger, xem §10 #7</td></tr>
             <tr><td>Bonus 1 — DagsHub</td><td class="num">4</td><td><span class="badge pending">Chờ token</span></td><td>Hook sẵn trong <code>mlops.yml</code></td></tr>
             <tr><td>Bonus 2 — Đa thuật toán</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td>§04/§08, 3 model_type so sánh</td></tr>
             <tr><td>Bonus 3 — Báo cáo tự động</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td><code>docs/evidence/report.txt</code></td></tr>
-            <tr><td>Bonus 4 — Rollback an toàn</td><td class="num">4</td><td><span class="badge ok">Code đạt</span> <span class="badge pending">Chờ demo CI</span></td><td>§03 giải thích code, §08</td></tr>
+            <tr><td>Bonus 4 — Rollback an toàn</td><td class="num">4</td><td><span class="badge ok">Đạt — cả 2 kịch bản</span></td><td>§08, <code>09-ci-run-2.log</code> + <code>10-bonus-4-rollback-block.log</code></td></tr>
             <tr><td>Bonus 5 — Cảnh báo drift</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td><code>10-bonus-5-drift.log</code></td></tr>
           </tbody>
         </table>
@@ -723,6 +789,18 @@ Accuracy: 0.6060 | F1: 0.5465</pre>
         <h4>#5 · Remote <code>main</code> có commit mới không có ở local trước khi push</h4>
         <p><code>git push</code> đầu tiên bị từ chối (<code>fetch first</code>) — một phiên làm việc trước đó (trên máy khác) đã commit thêm <code>docs/HANDOFF-PROMPT.md</code> lên <code>main</code>.</p>
         <p class="fix">Xử lý: <code>git fetch</code> + đọc nội dung commit lạ trước khi merge (xác nhận vô hại, đúng là tài liệu bàn giao của chính phiên làm việc này), sau đó <code>git pull --rebase</code> rồi push — giữ lịch sử tuyến tính, không mất commit nào.</p>
+      </div>
+
+      <div class="incident">
+        <h4>#6 · Path filter <code>data/**.dvc</code> / <code>src/**.py</code> không khớp file trực tiếp trong thư mục</h4>
+        <p>Commit dữ liệu Bước 3 (2998 → 5996 mẫu) được push lên <code>main</code> nhưng <strong>không</strong> tự kích hoạt pipeline như kỳ vọng. Kiểm tra qua GitHub API (<code>actions/runs?event=push</code>) xác nhận GitHub không hề tạo bản ghi run nào cho push này — nghĩa là path filter đã loại push ngay từ đầu, không phải job bị lỗi.</p>
+        <p class="fix">Xử lý: đổi <code>data/**.dvc</code> / <code>src/**.py</code> thành <code>data/**</code> / <code>src/**</code> (khớp cả file nằm trực tiếp trong thư mục, không chỉ file trong thư mục con) — sửa đúng theo tài liệu path filter của GitHub Actions.</p>
+      </div>
+
+      <div class="incident">
+        <h4>#7 · Push trigger không kích hoạt CI trong phiên làm việc này, kể cả khi bỏ hoàn toàn path filter</h4>
+        <p>Sau khi sửa #6, một push thật (chỉ sửa <code>params.yaml</code>, đúng path được theo dõi) vẫn không tạo run mới. Để chẩn đoán triệt để, đã thử bỏ <strong>toàn bộ</strong> <code>paths:</code> filter (chỉ còn <code>branches: [main]</code>) rồi push lại — vẫn không có run nào được tạo (<code>total_count=0</code> qua API, xác nhận qua nhiều lần polling). Repo, workflow (<code>state: active</code>), quyền Actions (<code>enabled: true, allowed_actions: all</code>) đều bình thường; chỉ riêng sự kiện <code>push</code> không được xử lý trong môi trường phiên làm việc này — nguyên nhân cụ thể (độ trễ webhook, hoặc giới hạn riêng của môi trường sandbox) chưa xác định được trong thời gian cho phép.</p>
+        <p class="fix">Xử lý: dùng <code>gh workflow run mlops.yml --ref &lt;branch&gt;</code> (<code>workflow_dispatch</code>) trên đúng commit vừa push để lấy kết quả — về mặt nội dung, dữ liệu và code chạy hệt như một lần push thật sẽ chạy, chỉ khác cơ chế kích hoạt. Cấu hình <code>on.push.paths</code> đã được khôi phục đúng và sẽ tự hoạt động trong môi trường CI/CD thông thường của người dùng cuối. Đây là hạn chế trung thực cần lưu ý: chưa xác minh được auto-trigger 100% zero-touch trong chính phiên làm việc này.</p>
       </div>
     </section>
 

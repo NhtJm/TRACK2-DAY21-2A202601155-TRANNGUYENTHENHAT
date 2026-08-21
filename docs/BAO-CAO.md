@@ -45,12 +45,19 @@ chuyển `credentialpath` sang `.dvc/config.local` (không commit); CI dùng bi�
 **(d) Token GitHub CLI thiếu scope `workflow`** khi mới đăng nhập, cần cấp thêm quyền qua
 `gh auth refresh -s workflow` mới push được thay đổi vào `.github/workflows/mlops.yml`.
 
+**(e) Path filter `data/**.dvc`/`src/**.py` không khớp file trực tiếp trong thư mục** — commit dữ liệu
+Bước 3 không tự kích hoạt CI. Sửa thành `data/**`/`src/**`. Riêng việc xác minh push tự kích hoạt
+(zero-touch) chưa thành công trong phiên làm việc này dù đã bỏ hẳn path filter để chẩn đoán (chi tiết:
+`docs/report.html` §10, sự cố #6-#7) — mọi bằng chứng CI dùng `workflow_dispatch` trên đúng commit đã
+push, cho kết quả tương đương một lần push thật.
+
 ## 3. Kết quả pipeline (tóm tắt)
 
 - MLflow: 15 lần chạy, đủ `accuracy` + `f1_score` mỗi lần (§04 báo cáo HTML).
-- DVC: remote GCS đã cấu hình, `dvc push` thành công 3 file dữ liệu (§05).
-- CI/CD 4 job (Test/Train/Eval/Deploy), VM FastAPI, demo eval-gate-fail, Bước 3 continuous training,
-  và 5 bonus: xem trạng thái cập nhật theo thời gian thực trong `docs/report.html`.
+- DVC: remote GCS đã cấu hình, `dvc push` thành công (§05).
+- CI/CD 4 job: Bước 2 (2998 mẫu, acc 0.682) Eval chặn đúng thiết kế; demo threshold=0.99 xác nhận gate;
+  Bước 3 (5996 mẫu, acc 0.746) **cả 4 job xanh**, VM deploy thành công, `curl /predict` xác nhận model
+  mới đang phục vụ tại `35.239.63.30:8000`. Chi tiết đầy đủ + log thật trong `docs/report.html`.
 
 ## 4. Bonus đã thực hiện
 
