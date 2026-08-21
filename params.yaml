@@ -2,7 +2,9 @@
 # Best run: n_estimators=300, max_depth=null, min_samples_split=2 -> accuracy=0.6820, f1=0.6811
 # (tren data/train_phase1.csv 2998 mau). Xem docs/evidence/mlflow-runs.csv va docs/report.html muc 3.
 # Buoc 3 (2998 -> 5996 mau, cung params nay): accuracy=0.7460, f1=0.7449 - vuot nguong 0.70.
+# DEMO Bonus 4 (nhanh demo/rollback-block): co tinh dung cau hinh yeu hon
+# model dang chay (0.746) de kiem chung rollback safety chan deploy.
 model_type: random_forest
-n_estimators: 300
-max_depth: null
+n_estimators: 50
+max_depth: 8
 min_samples_split: 2
