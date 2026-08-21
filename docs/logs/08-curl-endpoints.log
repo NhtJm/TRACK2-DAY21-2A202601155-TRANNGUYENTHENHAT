@@ -5,3 +5,9 @@ $ curl -s -X POST http://127.0.0.1:8000/predict -d {12 features mau}
 {"prediction":0,"label":"thap"}
 $ curl -s -X POST http://127.0.0.1:8000/predict -d {sai so luong feature, ky vong 400}
 HTTP_STATUS=400
+
+=== 2026-08-21T16:29:15Z Curl VM that (sau CI Deploy thanh cong, model Buoc 3 acc=0.746) ===
+$ curl -s http://35.239.63.30:8000/health
+{"status":"ok"}
+$ curl -s -X POST http://35.239.63.30:8000/predict -d {12 features mau}
+{"prediction":0,"label":"thap"}
