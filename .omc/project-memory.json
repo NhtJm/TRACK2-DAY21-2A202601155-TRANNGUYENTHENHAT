@@ -1,0 +1,82 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1787307349822,
+  "projectRoot": "/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "requirements.txt"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "pip",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": "snake_case",
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "src",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 3,
+      "lastAccessed": 1787307349810,
+      "keyFiles": [
+        "__init__.py",
+        "serve.py",
+        "train.py"
+      ]
+    },
+    "tasks": {
+      "path": "tasks",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1787307349813,
+      "keyFiles": [
+        "buoc-1.md",
+        "buoc-2.md",
+        "buoc-3.md"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 2,
+      "lastAccessed": 1787307349814,
+      "keyFiles": [
+        "__init__.py",
+        "test_train.py"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}
