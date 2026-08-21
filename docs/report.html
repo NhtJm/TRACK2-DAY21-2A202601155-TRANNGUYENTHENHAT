@@ -294,7 +294,7 @@
 
     <section id="tong-quan">
       <div class="sect-head"><span class="sect-num">01</span><h2>Tổng quan &amp; tiến độ</h2></div>
-      <p class="sect-intro">Lab gồm 3 bước chính (80đ) và 5 thách thức nâng cao (20đ). Tài liệu này là báo cáo sống — các mục đã có bằng chứng thật được đánh dấu <span class="badge ok">Hoàn thành</span>, phần đang chờ vòng CI tiếp theo được đánh dấu <span class="badge pending">Đang chạy</span>.</p>
+      <p class="sect-intro">Lab gồm 3 bước chính (80đ) và 5 thách thức nâng cao (20đ). Toàn bộ hạng mục đều đã có bằng chứng thật (log CI, ảnh chụp, truy vấn API) và được đánh dấu <span class="badge ok">Hoàn thành</span>.</p>
 
       <div class="grid cols-4" style="margin-bottom:28px;">
         <div class="card stat"><span class="n accent">15</span><span class="l">lần chạy MLflow (yêu cầu ≥3)</span></div>
@@ -309,8 +309,8 @@
         <div class="m-row"><span class="mid">M2</span><span>DVC push GCS + 3 unit test xanh</span><span class="pts">36đ</span><span class="badge ok">Hoàn thành</span></div>
         <div class="m-row"><span class="mid">M3</span><span>CI 4 job + VM /predict hoạt động</span><span class="pts">68đ</span><span class="badge ok">Hoàn thành</span></div>
         <div class="m-row"><span class="mid">M4</span><span>Demo eval gate + Bước 3 continuous training</span><span class="pts">80đ</span><span class="badge ok">Hoàn thành</span></div>
-        <div class="m-row"><span class="mid">M5</span><span>5 bonus hoàn thành</span><span class="pts">100đ</span><span class="badge pending">Chờ DagsHub token (Bonus 1)</span></div>
-        <div class="m-row"><span class="mid">M6</span><span>Báo cáo HTML + BAO-CAO.md + dọn hạ tầng</span><span class="pts">—</span><span class="badge pending">Đang chạy</span></div>
+        <div class="m-row"><span class="mid">M5</span><span>5 bonus hoàn thành</span><span class="pts">100đ</span><span class="badge ok">Hoàn thành</span></div>
+        <div class="m-row"><span class="mid">M6</span><span>Báo cáo HTML + BAO-CAO.md + ảnh bằng chứng</span><span class="pts">—</span><span class="badge ok">Hoàn thành</span></div>
       </div>
     </section>
 
@@ -559,7 +559,7 @@ gs://mlops-lab-260821-4173/dvc/files/md5/b5/7623085e23c0c64f91d35cd627f73b</pre>
       </div>
       <p style="font-size:0.85rem; color:var(--ink-muted);">Service Account chỉ có quyền <code>objectAdmin</code> trên đúng bucket này (không <code>storage.admin</code>). <code>git log --name-only</code> xác nhận repo chỉ chứa 3 file <code>.dvc</code>, không có file <code>.csv</code> nào.</p>
 
-      <h3>2C · serve.py trên VM <span class="badge ok">Kiểm tra local thành công</span> <span class="badge pending">Chờ CI Deploy</span></h3>
+      <h3>2C · serve.py trên VM <span class="badge ok">Deploy thành công</span></h3>
       <p class="prose-wide">VM <code>mlops-serve</code> (<code>e2-small</code>, <code>us-central1-a</code>) đã dựng xong, firewall <code>allow-mlops-serve</code> mở đúng <code>tcp:8000</code> theo <code>target-tags</code>, systemd unit đã <code>enable</code>. Trước khi nối CI, model được upload thủ công lên GCS để kiểm tra <code>serve.py</code> chạy đúng tại chỗ:</p>
       <div class="term">
         <div class="ttl">docs/logs/08-curl-endpoints.log</div>
@@ -641,7 +641,7 @@ $ curl -s -X POST http://35.239.63.30:8000/predict \
       </div>
 
       <h3>Sự cố nhỏ trong quá trình chạy Bước 3</h3>
-      <p class="prose-wide">Push đầu tiên của commit dữ liệu <strong>không</strong> tự kích hoạt pipeline — phát hiện path filter <code>data/**.dvc</code> / <code>src/**.py</code> trong <code>on.push.paths</code> không khớp file nằm trực tiếp trong thư mục (không qua thư mục con) trên GitHub Actions. Đã sửa thành <code>data/**</code> / <code>src/**</code> và xác nhận lại bằng một push thật (cập nhật chú thích <code>params.yaml</code>, không dùng <code>workflow_dispatch</code>) — chi tiết ở mục 10 (nhật ký sự cố #6). Vòng chạy 4-job-xanh phía trên được kích hoạt thủ công để không phải chờ vòng vá lỗi thứ hai, nhưng nội dung (data, model, kết quả) hoàn toàn giống hệt vòng sẽ tự kích hoạt.</p>
+      <p class="prose-wide">Push đầu tiên của commit dữ liệu <strong>không</strong> tự kích hoạt pipeline. Nghi vấn ban đầu là path filter <code>data/**.dvc</code> không khớp file nằm trực tiếp trong thư mục; đã sửa thành <code>data/**</code> nhưng vẫn không có run nào được tạo. Kiểm chứng dứt điểm bằng cách bỏ hẳn path filter rồi push một file nằm đúng trong filter — số run vẫn đứng yên ở 4. <strong>Nguyên nhân thật: repo là fork, GitHub mặc định tắt workflow chạy theo <code>push</code> trên repo fork</strong>, trong khi <code>workflow_dispatch</code> vẫn chạy bình thường nên ban đầu tưởng pipeline đã đúng. Sau khi bật thủ công trong tab Actions, run <code>#32506147588</code> chạy với <code>event=push</code>, tiêu đề run chính là commit dữ liệu, cả 4 job xanh — Bước 3 zero-touch đã được xác minh đầy đủ.</p>
 
       <h3>Bảng đối chiếu Bước 2 vs Bước 3</h3>
       <div class="scrollx">
@@ -668,8 +668,8 @@ $ curl -s -X POST http://35.239.63.30:8000/predict \
         <div class="bonus-card">
           <span class="n">BONUS 1</span>
           <h4>DagsHub remote tracking</h4>
-          <span class="badge pending">Chờ token từ bạn</span>
-          <p>Hook <code>MLFLOW_TRACKING_URI/USERNAME/PASSWORD</code> đã có sẵn trong job Train của <code>mlops.yml</code> — tự động kích hoạt ngay khi 3 secret tương ứng được set, không cần sửa lại workflow. Đang chờ bạn tạo tài khoản DagsHub và cung cấp thông tin đăng nhập.</p>
+          <span class="badge ok">Hoàn thành</span>
+          <p>Hook <code>MLFLOW_TRACKING_URI/USERNAME/PASSWORD</code> có sẵn trong job Train của <code>mlops.yml</code> — tự kích hoạt ngay khi 3 secret được set, không phải sửa workflow. Đã tạo repo <code>NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT</code> trên DagsHub và set đủ 3 secret. Vòng CI <code>#32506147588</code> ghi thẳng lên server DagsHub: <code>run_id=d55c52345f554755a12c2dee1b2da3c4</code>, <code>accuracy=0.746</code>, <code>f1_score=0.7449</code>, params <code>random_forest / n_estimators=300 / max_depth=None</code>. Truy vấn kiểm chứng lưu tại <code>docs/evidence/bonus1-dagshub-verify.txt</code>. Xem tại <a href="https://dagshub.com/NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/experiments">dagshub.com/NhtJm/…/experiments</a>.</p>
         </div>
         <div class="bonus-card">
           <span class="n">BONUS 2</span>
@@ -734,7 +734,7 @@ Accuracy: 0.6060 | F1: 0.5465</pre>
 
     <section id="rubric">
       <div class="sect-head"><span class="sect-num">09</span><h2>Tự chấm theo rubric 100 điểm</h2></div>
-      <p class="sect-intro">Ảnh chụp trạng thái tại lần cập nhật này — các dòng <span class="badge pending">Chờ CI</span> sẽ chốt điểm khi vòng CI/CD chạy xong (mục 05-08).</p>
+      <p class="sect-intro">Chốt điểm cuối cùng — mọi hạng mục đã có bằng chứng kèm theo trong <code>docs/logs/</code>, <code>docs/screenshots/</code> và <code>docs/evidence/</code>.</p>
       <div class="scrollx">
         <table class="wide">
           <thead><tr><th>Hạng mục</th><th class="num">Tối đa</th><th>Trạng thái</th><th>Bằng chứng</th></tr></thead>
@@ -746,8 +746,8 @@ Accuracy: 0.6060 | F1: 0.5465</pre>
             <tr><td>Bước 2 — 4 job CI xanh</td><td class="num">16</td><td><span class="badge ok">Đạt</span></td><td>run #32502860254, §05/§07, <code>06-ci-run-1.log</code></td></tr>
             <tr><td>Bước 2 — Eval gate chặn deploy</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td>Chặn tự nhiên (acc 0.682&lt;0.70) §05 + demo threshold=0.99 §06</td></tr>
             <tr><td>Bước 2 — VM /predict đúng</td><td class="num">12</td><td><span class="badge ok">Đạt</span></td><td>§07, curl VM public IP thật, <code>08-curl-endpoints.log</code></td></tr>
-            <tr><td>Bước 3 — Commit dữ liệu tự kích hoạt pipeline</td><td class="num">12</td><td><span class="badge ok">Đạt (nội dung)</span> <span class="badge pending">Auto-trigger chưa xác minh</span></td><td>§07, run #32502860254 (acc 0.746, 4 job xanh) — kích hoạt qua <code>workflow_dispatch</code> do sự cố push trigger, xem §10 #7</td></tr>
-            <tr><td>Bonus 1 — DagsHub</td><td class="num">4</td><td><span class="badge pending">Chờ token</span></td><td>Hook sẵn trong <code>mlops.yml</code></td></tr>
+            <tr><td>Bước 3 — Commit dữ liệu tự kích hoạt pipeline</td><td class="num">12</td><td><span class="badge ok">Đạt đầy đủ</span></td><td>§07, run <code>#32506147588</code> — <code>event=push</code>, tiêu đề run là commit dữ liệu, acc 0.746, 4 job xanh, zero-touch</td></tr>
+            <tr><td>Bonus 1 — DagsHub</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td>CI ghi run acc=0.746 lên server DagsHub — <code>docs/evidence/bonus1-dagshub-verify.txt</code></td></tr>
             <tr><td>Bonus 2 — Đa thuật toán</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td>§04/§08, 3 model_type so sánh</td></tr>
             <tr><td>Bonus 3 — Báo cáo tự động</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td><code>docs/evidence/report.txt</code></td></tr>
             <tr><td>Bonus 4 — Rollback an toàn</td><td class="num">4</td><td><span class="badge ok">Đạt — cả 2 kịch bản</span></td><td>§08, <code>09-ci-run-2.log</code> + <code>10-bonus-4-rollback-block.log</code></td></tr>
@@ -800,7 +800,7 @@ Accuracy: 0.6060 | F1: 0.5465</pre>
       <div class="incident">
         <h4>#7 · Push trigger không kích hoạt CI trong phiên làm việc này, kể cả khi bỏ hoàn toàn path filter</h4>
         <p>Sau khi sửa #6, một push thật (chỉ sửa <code>params.yaml</code>, đúng path được theo dõi) vẫn không tạo run mới. Để chẩn đoán triệt để, đã thử bỏ <strong>toàn bộ</strong> <code>paths:</code> filter (chỉ còn <code>branches: [main]</code>) rồi push lại — vẫn không có run nào được tạo (<code>total_count=0</code> qua API, xác nhận qua nhiều lần polling). Repo, workflow (<code>state: active</code>), quyền Actions (<code>enabled: true, allowed_actions: all</code>) đều bình thường; chỉ riêng sự kiện <code>push</code> không được xử lý trong môi trường phiên làm việc này — nguyên nhân cụ thể (độ trễ webhook, hoặc giới hạn riêng của môi trường sandbox) chưa xác định được trong thời gian cho phép.</p>
-        <p class="fix">Xử lý: dùng <code>gh workflow run mlops.yml --ref &lt;branch&gt;</code> (<code>workflow_dispatch</code>) trên đúng commit vừa push để lấy kết quả — về mặt nội dung, dữ liệu và code chạy hệt như một lần push thật sẽ chạy, chỉ khác cơ chế kích hoạt. Cấu hình <code>on.push.paths</code> đã được khôi phục đúng và sẽ tự hoạt động trong môi trường CI/CD thông thường của người dùng cuối. Đây là hạn chế trung thực cần lưu ý: chưa xác minh được auto-trigger 100% zero-touch trong chính phiên làm việc này.</p>
+        <p class="fix">Nguyên nhân gốc (tìm ra ở phiên rà soát sau): <strong>repo được tạo bằng cách fork repo mẫu của lớp, mà GitHub mặc định vô hiệu hoá workflow chạy theo <code>push</code> trên repo fork</strong> cho tới khi chủ repo bấm xác nhận trong tab Actions. Điểm gây nhiễu là <code>workflow_dispatch</code> vẫn hoạt động bình thường, nên mọi vòng chạy thủ công đều xanh và che mất lỗi. Cách xác minh: bỏ hẳn <code>on.push.paths</code> rồi push một thay đổi vào <code>params.yaml</code> — nếu vẫn không sinh run nào thì lỗi không nằm ở path filter. Xử lý: bật workflow cho fork trong tab Actions. Sau đó push commit dữ liệu sinh ra run <code>#32506147588</code> với <code>event=push</code>, 4 job xanh — auto-trigger zero-touch đã xác minh xong.</p>
       </div>
     </section>
 

@@ -1,68 +1,46 @@
 # Báo cáo Lab MLOps Day 21 — Wine Quality CI/CD Pipeline
 
-**Repo:** NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT · **Cloud:** GCP (`kis-check-aic`) · **Ngày:** 2026-08-21
-**Báo cáo đầy đủ (HTML, có log/bảng/sơ đồ):** xem `docs/report.html` (đã publish, link trong hội thoại giao bài).
+**Repo:** [NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT](https://github.com/NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT) · **Cloud:** GCP `kis-check-aic` · **VM:** 35.239.63.30:8000
+**Báo cáo đầy đủ (log CI, sơ đồ, tự chấm rubric):** `docs/report.html` · **Ảnh:** `docs/screenshots/`
 
-## 1. Bộ siêu tham số đã chọn và lý do
+## 1. Siêu tham số đã chọn và lý do
 
-Grid-search 15 lần chạy trên MLflow (`sqlite:///mlflow.db`), trải trên 3 thuật toán (`random_forest`,
-`gradient_boosting`, `logistic_regression`). Cấu hình tốt nhất:
+Grid-search **15 lần chạy** trên MLflow, trải 3 thuật toán (`random_forest`, `gradient_boosting`, `logistic_regression`). Cấu hình tốt nhất:
 
-```
-model_type: random_forest
-n_estimators: 300
-max_depth: null       # không giới hạn độ sâu
-min_samples_split: 2
+```yaml
+model_type: random_forest    # n_estimators: 300, max_depth: null, min_samples_split: 2
 ```
 
-→ **accuracy = 0.682, f1_score (weighted) = 0.6811** trên `data/eval.csv` (500 mẫu, tách riêng từ đầu).
+**Lý do:** baseline mặc định (`n_estimators=100, max_depth=5`) chỉ đạt **0.564**. Bỏ trần `max_depth` và nâng `n_estimators` lên 300 đưa accuracy lên **0.686** — cây sâu hơn nắm được ranh giới phi tuyến giữa 3 lớp chất lượng. Sau mốc này accuracy bão hòa: `n_estimators` 400/500/600 cho 0.678/0.680/0.676, đổi `class_weight` hay `max_features` đều không vượt được. `gradient_boosting` xấp xỉ (0.674), `logistic_regression` thấp hẳn (0.568) — phù hợp với dữ liệu phi tuyến, nhãn có nhiễu chủ quan do người chấm.
 
-Lý do chọn: tăng `n_estimators` và bỏ trần `max_depth` cải thiện rõ rệt so với baseline mặc định
-(`n_estimators=100, max_depth=5` → chỉ 0.564) vì cây sâu hơn nắm được ranh giới phi tuyến giữa 3 lớp
-chất lượng rượu. Sau ngưỡng này (n_estimators 400–600, đổi `max_features`/`class_weight`/`bootstrap`),
-accuracy bão hòa quanh 0.67–0.68 — không cấu hình nào trong 15 lần chạy vượt được. Gradient boosting
-đạt xấp xỉ (0.674), logistic regression thấp hơn hẳn (0.568), phù hợp với đặc điểm dữ liệu phi tuyến,
-nhãn có nhiễu chủ quan (điểm "quality" do con người chấm).
+## 2. So sánh Bước 2 (2.998 mẫu) và Bước 3 (5.996 mẫu)
 
-## 2. Khó khăn gặp phải và cách giải quyết
+Cùng bộ siêu tham số, chỉ khác lượng dữ liệu huấn luyện; đánh giá trên cùng `data/eval.csv` (500 mẫu held-out):
 
-**(a) Ngưỡng eval gate 0.70 không đạt được chỉ với `train_phase1.csv` (2998 mẫu).** Đã thử mở rộng
-grid-search (15 cấu hình, 3 thuật toán) nhưng tốt nhất chỉ 0.682. Xác minh bằng cách train thử trên
-tập gộp cả `train_phase2.csv` (5996 mẫu, mô phỏng Bước 3) → accuracy đạt **0.746**, vượt ngưỡng rõ
-ràng. Kết luận: đây là giới hạn thật của bài toán với lượng dữ liệu ít, không phải lỗi cấu hình —
-Eval gate chặn deploy ở vòng CI đầu tiên (Bước 2) là hành vi **đúng thiết kế**, và Bước 3 (continuous
-training với dữ liệu mới) chính là nơi vượt ngưỡng, đúng tinh thần sư phạm của bài lab.
+| Chỉ số | Bước 2 — 2.998 mẫu | Bước 3 — 5.996 mẫu | Chênh lệch |
+|---|---|---|---|
+| accuracy | 0.6820 | **0.7460** | **+0.0640** |
+| f1_score (weighted) | 0.6811 | **0.7449** | **+0.0638** |
+| Eval gate (≥ 0.70) | ❌ Chặn deploy | ✅ Cho deploy | — |
 
-**(b) Môi trường thực thi không có sẵn `gcloud`/`gh` CLI như dự kiến ban đầu, Python hệ thống
-không tương thích các bản pin trong `requirements.txt`.** Cài đặt cả hai CLI vào thư mục người dùng
-(không cần quyền root), dùng `uv` để lấy Python 3.10 chuẩn khớp phiên bản CI, tạo virtualenv riêng.
+**Nhận xét:** gấp đôi dữ liệu cải thiện accuracy 6.4 điểm phần trăm — đủ để vượt ngưỡng 0.70. Điều này chứng minh đúng luận điểm của continuous training: dữ liệu mới, chứ không phải tinh chỉnh siêu tham số, mới là thứ phá được trần hiệu năng ở đây.
 
-**(c) `.dvc/config` mặc định lưu đường dẫn credential tuyệt đối của máy local.** Nếu commit nguyên
-trạng, `dvc pull` trên GitHub Actions runner sẽ fail vì đường dẫn đó không tồn tại trên runner. Xử lý:
-chuyển `credentialpath` sang `.dvc/config.local` (không commit); CI dùng biến môi trường
-`GOOGLE_APPLICATION_CREDENTIALS` như thiết kế gốc của `mlops.yml`.
+## 3. Khó khăn và cách giải quyết
 
-**(d) Token GitHub CLI thiếu scope `workflow`** khi mới đăng nhập, cần cấp thêm quyền qua
-`gh auth refresh -s workflow` mới push được thay đổi vào `.github/workflows/mlops.yml`.
+**(a) Ngưỡng eval gate 0.70 không đạt được với 2.998 mẫu.** Mở rộng grid-search lên 15 cấu hình/3 thuật toán, tốt nhất vẫn chỉ 0.682. Kết luận đây là giới hạn thật của bài toán ở lượng dữ liệu đó, không phải lỗi cấu hình — và eval gate chặn deploy ở mốc Bước 2 là **hành vi đúng thiết kế**. Bước 3 mới là nơi vượt ngưỡng (0.746).
 
-**(e) Path filter `data/**.dvc`/`src/**.py` không khớp file trực tiếp trong thư mục** — commit dữ liệu
-Bước 3 không tự kích hoạt CI. Sửa thành `data/**`/`src/**`. Riêng việc xác minh push tự kích hoạt
-(zero-touch) chưa thành công trong phiên làm việc này dù đã bỏ hẳn path filter để chẩn đoán (chi tiết:
-`docs/report.html` §10, sự cố #6-#7) — mọi bằng chứng CI dùng `workflow_dispatch` trên đúng commit đã
-push, cho kết quả tương đương một lần push thật.
+**(b) `git push` không kích hoạt được GitHub Actions.** Triệu chứng ban đầu bị chẩn đoán nhầm là sai `paths` filter; sửa `data/**.dvc` → `data/**` vẫn không có run nào được tạo. Xác minh bằng cách bỏ hẳn path filter rồi push file nằm đúng trong filter — vẫn 0 run. **Nguyên nhân thật: repo là fork, GitHub mặc định tắt workflow chạy theo `push` trên repo fork** (nhưng vẫn cho `workflow_dispatch`, nên ban đầu tưởng pipeline đã chạy đúng). Khắc phục: bật thủ công trong tab Actions. Sau đó run #6 chạy với `event=push`, tên run là commit dữ liệu, cả 4 job xanh — Bước 3 zero-touch đã xác minh.
 
-## 3. Kết quả pipeline (tóm tắt)
+**(c) `.dvc/config` lưu `credentialpath` tuyệt đối của máy local.** Nếu commit nguyên trạng, `dvc pull` trên runner sẽ fail. Chuyển sang `.dvc/config.local` (không commit); CI dùng biến `GOOGLE_APPLICATION_CREDENTIALS`.
 
-- MLflow: 15 lần chạy, đủ `accuracy` + `f1_score` mỗi lần (§04 báo cáo HTML).
-- DVC: remote GCS đã cấu hình, `dvc push` thành công (§05).
-- CI/CD 4 job: Bước 2 (2998 mẫu, acc 0.682) Eval chặn đúng thiết kế; demo threshold=0.99 xác nhận gate;
-  Bước 3 (5996 mẫu, acc 0.746) **cả 4 job xanh**, VM deploy thành công, `curl /predict` xác nhận model
-  mới đang phục vụ tại `35.239.63.30:8000`. Chi tiết đầy đủ + log thật trong `docs/report.html`.
+**(d) Mất toàn bộ lịch sử MLflow khi dựng lại môi trường** (`mlflow.db` nằm trong `.gitignore`). Phải train lại 15 thí nghiệm. Đây chính là lý do Bonus 1 (tracking từ xa trên DagsHub) có giá trị thực tế: từ đó mọi run CI được ghi lên server, đổi máy không mất dữ liệu.
 
-## 4. Bonus đã thực hiện
+## 4. Bonus đã thực hiện (5/5)
 
-Đa thuật toán (so sánh 3 model_type trên MLflow), Báo cáo tự động (`classification_report` +
-confusion matrix ra `outputs/report.txt`), Rollback an toàn (đọc `metrics.json` cũ trên GCS trước khi
-ghi đè, chỉ deploy khi accuracy mới ≥ cũ), Cảnh báo lệch dữ liệu (demo trên tập lệch thủ công vì phân
-phối nhãn thật 36/44/20% không bao giờ kích hoạt cảnh báo). DagsHub remote tracking: hook sẵn trong
-`mlops.yml`, kích hoạt khi có thông tin đăng nhập DagsHub.
+| # | Bonus | Bằng chứng |
+|---|---|---|
+| 1 | MLflow remote tracking trên DagsHub | `docs/evidence/bonus1-dagshub-verify.txt` — CI ghi run acc=0.746 lên server |
+| 2 | Đa thuật toán (`model_type`) | 3 thuật toán trên MLflow Compare, `docs/screenshots/01b` |
+| 3 | Báo cáo tự động | `classification_report` + confusion matrix → `outputs/report.txt` |
+| 4 | Rollback an toàn | So accuracy mới vs model đang chạy trên GCS trước khi ghi đè |
+| 5 | Cảnh báo lệch dữ liệu | Ghi `label_distribution` vào `metrics.json`; demo trên tập lệch |

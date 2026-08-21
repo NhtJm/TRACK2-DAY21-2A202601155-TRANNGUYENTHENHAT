@@ -331,9 +331,12 @@ Báo cáo đầy đủ (kiến trúc, log CI thật, 15 thí nghiệm MLflow, 5 
 | Hạng mục | Kết quả |
 |---|---|
 | Params tốt nhất | `random_forest`, `n_estimators=300`, `max_depth=null`, `min_samples_split=2` |
+| Bước 1 | 15 thí nghiệm MLflow, best accuracy 0.686 / f1 0.685 |
 | Bước 2 (2998 mẫu) | accuracy 0.682 — Eval gate chặn deploy đúng thiết kế (< 0.70) |
-| Bước 3 (5996 mẫu) | accuracy 0.746 — 4 job CI xanh, deploy thành công, VM phục vụ `/predict` |
-| Bonus | Đa thuật toán, báo cáo tự động, rollback an toàn, cảnh báo drift: hoàn thành. DagsHub: đang chờ |
+| Bước 3 (5996 mẫu) | accuracy 0.746 / f1 0.745 — commit dữ liệu tự kích hoạt pipeline (`event=push`), 4 job CI xanh, VM phục vụ `/predict` |
+| Bonus | 5/5: DagsHub remote tracking, đa thuật toán, báo cáo tự động, rollback an toàn, cảnh báo drift |
+
+Ảnh bằng chứng: [`docs/screenshots/`](docs/screenshots/) · Log CI thật: [`docs/logs/`](docs/logs/)
 
 ---
 
