@@ -1,0 +1,32 @@
+=== 2026-08-21T16:22:32Z GD7: Buoc 3 - continuous training ===
+$ .venv/bin/python add_new_data.py
+Cap nhat du lieu: 2998 -> 5996 mau
+$ wc -l data/train_phase1.csv
+5997 data/train_phase1.csv
+$ .venv/bin/dvc add data/train_phase1.csv
+
+To track the changes with git, run:
+
+	git add data/train_phase1.csv.dvc
+
+To enable auto staging, run:
+
+	dvc config core.autostage true
+$ .venv/bin/dvc push
+1 file pushed
+$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   data/train_phase1.csv.dvc
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/logs/06-ci-run-1.log
+	docs/logs/07-eval-gate-fail.log
+	docs/logs/09-ci-run-2.log
+
+no changes added to commit (use "git add" and/or "git commit -a")
