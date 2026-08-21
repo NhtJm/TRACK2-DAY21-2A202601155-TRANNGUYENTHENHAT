@@ -3,6 +3,10 @@ name: MLOps Pipeline
 on:
   push:
     branches: [main]
+    paths:
+      - 'data/**'
+      - 'src/**'
+      - 'params.yaml'
   workflow_dispatch:
     inputs:
       threshold:
