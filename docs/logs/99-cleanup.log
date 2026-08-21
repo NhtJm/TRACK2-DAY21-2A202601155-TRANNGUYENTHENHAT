@@ -1,0 +1,35 @@
+=== DON DEP HA TANG - 2026-08-21T18:46:14Z ===
+
+Ly do: da thu thap day du bang chung (9 anh + log CI + evidence),
+xoa VM de tranh phat sinh chi phi.
+
+--- Trang thai truoc khi xoa ---
+NAME         ZONE           MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP   STATUS
+mlops-serve  us-central1-a  e2-small                   10.128.0.2   35.239.63.30  RUNNING
+NAME               ALLOW
+allow-mlops-serve  tcp:8000
+
+--- Bang chung cuoi cung truoc khi xoa: endpoint van song ---
+$ curl http://35.239.63.30:8000/health
+{"status":"ok"}
+$ curl -X POST http://35.239.63.30:8000/predict ...
+{"prediction":0,"label":"thap"}
+
+--- Xoa VM ---
+Deleted [https://www.googleapis.com/compute/v1/projects/kis-check-aic/zones/us-central1-a/instances/mlops-serve].
+
+--- Xoa firewall rule ---
+Deleted [https://www.googleapis.com/compute/v1/projects/kis-check-aic/global/firewalls/allow-mlops-serve].
+
+--- Ra soat tai nguyen con lai sau khi xoa VM ---
+Compute instances : 0
+Disks mo coi      : 0
+IP tinh           : 0
+Snapshots/images  : 0
+Firewall lab      : da xoa (chi con default-allow-ssh cua project)
+Service account   : mlops-lab-sa@kis-check-aic.iam.gserviceaccount.com (mien phi, giu lai)
+Bucket lab        : gs://mlops-lab-260821-4173 - 62.31 MiB (~$0.0012/thang)
+                    GIU LAI: chua bang chung cham diem (dvc/ + models/latest/model.pkl)
+                    va la nguon 'dvc pull' cua job Train trong CI.
+
+=== KET THUC DON DEP - 2026-08-21T18:48:49Z ===
