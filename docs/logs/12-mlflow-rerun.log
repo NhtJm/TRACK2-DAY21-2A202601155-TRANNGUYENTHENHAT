@@ -1,0 +1,152 @@
+Se chay lai 15 thi nghiem
+======================================================================
+[1/15] {'model_type': 'random_forest', 'n_estimators': 100, 'max_depth': 5, 'min_samples_split': 2}
+2026/08/21 23:52:34 INFO mlflow.store.db.utils: Creating initial MLflow database tables...
+2026/08/21 23:52:34 INFO mlflow.store.db.utils: Updating database tables
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 451aebb31d03, add metric step
+INFO  [alembic.runtime.migration] Running upgrade 451aebb31d03 -> 90e64c465722, migrate user column to tags
+INFO  [alembic.runtime.migration] Running upgrade 90e64c465722 -> 181f10493468, allow nulls for metric values
+INFO  [alembic.runtime.migration] Running upgrade 181f10493468 -> df50e92ffc5e, Add Experiment Tags Table
+INFO  [alembic.runtime.migration] Running upgrade df50e92ffc5e -> 7ac759974ad8, Update run tags with larger limit
+INFO  [alembic.runtime.migration] Running upgrade 7ac759974ad8 -> 89d4b8295536, create latest metrics table
+INFO  [89d4b8295536_create_latest_metrics_table_py] Migration complete!
+INFO  [alembic.runtime.migration] Running upgrade 89d4b8295536 -> 2b4d017a5e9b, add model registry tables to db
+INFO  [2b4d017a5e9b_add_model_registry_tables_to_db_py] Adding registered_models and model_versions tables to database.
+INFO  [2b4d017a5e9b_add_model_registry_tables_to_db_py] Migration complete!
+INFO  [alembic.runtime.migration] Running upgrade 2b4d017a5e9b -> cfd24bdc0731, Update run status constraint with killed
+INFO  [alembic.runtime.migration] Running upgrade cfd24bdc0731 -> 0a8213491aaa, drop_duplicate_killed_constraint
+INFO  [alembic.runtime.migration] Running upgrade 0a8213491aaa -> 728d730b5ebd, add registered model tags table
+INFO  [alembic.runtime.migration] Running upgrade 728d730b5ebd -> 27a6a02d2cf1, add model version tags table
+INFO  [alembic.runtime.migration] Running upgrade 27a6a02d2cf1 -> 84291f40a231, add run_link to model_version
+INFO  [alembic.runtime.migration] Running upgrade 84291f40a231 -> a8c4a736bde6, allow nulls for run_id
+INFO  [alembic.runtime.migration] Running upgrade a8c4a736bde6 -> 39d1c3be5f05, add_is_nan_constraint_for_metrics_tables_if_necessary
+INFO  [alembic.runtime.migration] Running upgrade 39d1c3be5f05 -> c48cb773bb87, reset_default_value_for_is_nan_in_metrics_table_for_mysql
+INFO  [alembic.runtime.migration] Running upgrade c48cb773bb87 -> bd07f7e963c5, create index on run_uuid
+INFO  [alembic.runtime.migration] Running upgrade bd07f7e963c5 -> 0c779009ac13, add deleted_time field to runs table
+INFO  [alembic.runtime.migration] Running upgrade 0c779009ac13 -> cc1f77228345, change param value length to 500
+INFO  [alembic.runtime.migration] Running upgrade cc1f77228345 -> 97727af70f4d, Add creation_time and last_update_time to experiments table
+INFO  [alembic.runtime.migration] Running upgrade 97727af70f4d -> 3500859a5d39, Add Model Aliases table
+INFO  [alembic.runtime.migration] Running upgrade 3500859a5d39 -> 7f2a7d5fae7d, add datasets inputs input_tags tables
+INFO  [alembic.runtime.migration] Running upgrade 7f2a7d5fae7d -> 2d6e25af4d3e, increase max param val length from 500 to 8000
+INFO  [alembic.runtime.migration] Running upgrade 2d6e25af4d3e -> acf3f17fdcc7, add storage location field to model versions
+INFO  [alembic.runtime.migration] Running upgrade acf3f17fdcc7 -> 867495a8f9d4, add trace tables
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+Accuracy: 0.5640 | F1: 0.5534
+    -> acc=0.5640  (goc: 0.564)  5.1s
+
+[2/15] {'model_type': 'random_forest', 'n_estimators': 50, 'max_depth': 3, 'min_samples_split': 2}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.5580 | F1: 0.5185
+    -> acc=0.5580  (goc: 0.558)  1.6s
+
+[3/15] {'model_type': 'random_forest', 'n_estimators': 200, 'max_depth': 10, 'min_samples_split': 5}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6420 | F1: 0.6394
+    -> acc=0.6420  (goc: 0.644)  2.2s
+
+[4/15] {'model_type': 'random_forest', 'n_estimators': 300, 'max_depth': None, 'min_samples_split': 2}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6860 | F1: 0.6853
+    -> acc=0.6860  (goc: 0.682)  2.9s
+
+[5/15] {'model_type': 'random_forest', 'n_estimators': 200, 'max_depth': 20, 'min_samples_split': 5}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6640 | F1: 0.6623
+    -> acc=0.6640  (goc: 0.664)  2.4s
+
+[6/15] {'model_type': 'random_forest', 'n_estimators': 500, 'max_depth': None, 'min_samples_split': 2}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6800 | F1: 0.6788
+    -> acc=0.6800  (goc: 0.676)  3.9s
+
+[7/15] {'model_type': 'random_forest', 'n_estimators': 400, 'max_depth': None, 'min_samples_split': 2}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6780 | F1: 0.6772
+    -> acc=0.6780  (goc: 0.674)  3.4s
+
+[8/15] {'model_type': 'gradient_boosting', 'n_estimators': 200, 'max_depth': 5, 'min_samples_split': 2}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6740 | F1: 0.6731
+    -> acc=0.6740  (goc: 0.674)  6.5s
+
+[9/15] {'model_type': 'gradient_boosting', 'n_estimators': 300, 'max_depth': 3, 'min_samples_split': 2}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6020 | F1: 0.5997
+    -> acc=0.6020  (goc: 0.602)  5.8s
+
+[10/15] {'model_type': 'logistic_regression', 'n_estimators': 100, 'max_depth': 5, 'min_samples_split': 2}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.5680 | F1: 0.5632
+    -> acc=0.5680  (goc: 0.568)  1.5s
+
+[11/15] {'model_type': 'random_forest', 'n_estimators': 300, 'max_depth': None, 'min_samples_split': 2, 'max_features': None}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6720 | F1: 0.6705
+    -> acc=0.6720  (goc: 0.672)  5.5s
+
+[12/15] {'model_type': 'random_forest', 'n_estimators': 300, 'max_depth': None, 'min_samples_split': 2, 'class_weight': 'balanced'}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6760 | F1: 0.6740
+    -> acc=0.6760  (goc: 0.668)  3.0s
+
+[13/15] {'model_type': 'random_forest', 'n_estimators': 500, 'max_depth': None, 'min_samples_split': 2, 'class_weight': 'balanced_subsample', 'max_features': None}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6740 | F1: 0.6726
+    -> acc=0.6740  (goc: 0.67)  8.4s
+
+[14/15] {'model_type': 'random_forest', 'n_estimators': 300, 'max_depth': None, 'min_samples_split': 2, 'max_features': None}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6720 | F1: 0.6705
+    -> acc=0.6720  (goc: 0.626)  5.5s
+
+[15/15] {'model_type': 'random_forest', 'n_estimators': 600, 'max_depth': None, 'min_samples_split': 2, 'max_features': 'log2'}
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:18: UserWarning: Distutils was imported before Setuptools, but importing Setuptools also replaces the `distutils` module in `sys.modules`. This may lead to undesirable behaviors or errors. To avoid these issues, avoid using distutils directly, ensure that setuptools is installed in the traditional way (e.g. not an editable install), and/or make sure that setuptools is always imported before distutils.
+  warnings.warn(
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Accuracy: 0.6760 | F1: 0.6749
+    -> acc=0.6760  (goc: 0.678)  4.4s
+
+=== 15 RUNS DONE ===

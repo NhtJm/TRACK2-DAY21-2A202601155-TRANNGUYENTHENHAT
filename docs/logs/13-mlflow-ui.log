@@ -1,0 +1,10 @@
+/Users/nhatnguyen/Desktop/AIA/labs/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:386: UserWarning: Valid config keys have changed in V2:
+* 'schema_extra' has been renamed to 'json_schema_extra'
+  warnings.warn(message, UserWarning)
+[2026-08-21 23:54:49 +0700] [257] [INFO] Starting gunicorn 22.0.0
+[2026-08-21 23:54:49 +0700] [257] [INFO] Listening at: http://127.0.0.1:5000 (257)
+[2026-08-21 23:54:49 +0700] [257] [INFO] Using worker: sync
+[2026-08-21 23:54:49 +0700] [258] [INFO] Booting worker with pid: 258
+[2026-08-21 23:54:49 +0700] [259] [INFO] Booting worker with pid: 259
+[2026-08-21 23:54:49 +0700] [260] [INFO] Booting worker with pid: 260
+[2026-08-21 23:54:49 +0700] [261] [INFO] Booting worker with pid: 261
