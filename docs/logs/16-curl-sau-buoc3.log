@@ -1,0 +1,5 @@
+=== 2026-08-21T17:08:43Z endpoint sau deploy Buoc 3 ===
+$ curl http://35.239.63.30:8000/health
+{"status":"ok"}
+$ curl -X POST .../predict
+{"prediction":0,"label":"thap"}

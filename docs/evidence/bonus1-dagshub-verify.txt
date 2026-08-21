@@ -1,0 +1,12 @@
+=== BONUS 1: MLflow remote tracking tren DagsHub ===
+Tracking URI : https://dagshub.com/NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT.mlflow
+Xem tai      : https://dagshub.com/NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/experiments
+Thoi diem    : 2026-08-21T17:09:15Z
+
+--- Truy van server DagsHub bang MLflow client ---
+Experiment 'Default' (id=0): 1 run
+  run_id     : d55c52345f554755a12c2dee1b2da3c4
+  status     : FINISHED
+  accuracy   : 0.746
+  f1_score   : 0.7449481408322124
+  params     : {'model_type': 'random_forest', 'n_estimators': '300', 'max_depth': 'None', 'min_samples_split': '2'}
