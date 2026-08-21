@@ -8,6 +8,11 @@ on:
       - 'src/**.py'
       - 'params.yaml'
   workflow_dispatch:
+    inputs:
+      threshold:
+        description: 'Nguong accuracy toi thieu de deploy (mac dinh 0.70)'
+        required: false
+        default: '0.70'
 
 jobs:
 
@@ -32,7 +37,7 @@ jobs:
 
       - name: Run unit tests
         # TODO 1: Viet lenh de chay pytest tren thu muc tests/ voi co -v
-        run: # <dien lenh o day>
+        run: pytest tests/ -v
 
 
   # ---------------------------------------------------------------------------
@@ -46,6 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       accuracy: ${{ steps.read_metrics.outputs.accuracy }}
+      should_deploy: ${{ steps.rollback_check.outputs.should_deploy }}
 
     steps:
       - uses: actions/checkout@v4
@@ -57,6 +63,19 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Set MLflow remote tracking env (Bonus 1 - DagsHub, tuy chon)
+        # Neu chua cau hinh secret MLFLOW_TRACKING_URI/USERNAME/PASSWORD thi
+        # bo qua, train.py se dung tracking local mac dinh (khong loi).
+        run: |
+          if [ -n "${{ secrets.MLFLOW_TRACKING_URI }}" ]; then
+            echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> $GITHUB_ENV
+            echo "MLFLOW_TRACKING_USERNAME=${{ secrets.MLFLOW_TRACKING_USERNAME }}" >> $GITHUB_ENV
+            echo "MLFLOW_TRACKING_PASSWORD=${{ secrets.MLFLOW_TRACKING_PASSWORD }}" >> $GITHUB_ENV
+            echo "Da cau hinh MLflow tracking remote (DagsHub)."
+          else
+            echo "Chua co secret DagsHub, dung MLflow tracking local mac dinh."
+          fi
+
       - name: Authenticate to Cloud Storage
         # TODO 2: Ghi noi dung credentials ra file tam va set bien moi truong xac thuc.
         # GCP:   echo '${{ secrets.CLOUD_CREDENTIALS }}' > /tmp/sa-key.json
@@ -65,12 +84,13 @@ jobs:
         #        echo "AWS_SECRET_ACCESS_KEY=..." >> $GITHUB_ENV
         # Azure: echo "AZURE_STORAGE_CONNECTION_STRING=..." >> $GITHUB_ENV
         run: |
-          # <dien code o day>
+          echo '${{ secrets.CLOUD_CREDENTIALS }}' > /tmp/sa-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json" >> $GITHUB_ENV
 
       - name: Pull data with DVC
         # TODO 3: Pull cac file du lieu can thiet tu cloud storage bang lenh dvc pull.
         #         Chi pull train_phase1.csv va eval.csv (khong can train_phase2.csv).
-        run: # <dien lenh o day>
+        run: dvc pull data/train_phase1.csv.dvc data/eval.csv.dvc
 
       - name: Train model
         run: python src/train.py
@@ -84,16 +104,67 @@ jobs:
         #   ACC=$(python -c "import json; d=json.load(open('outputs/metrics.json')); print(d['accuracy'])")
         #   echo "accuracy=$ACC" >> $GITHUB_OUTPUT
         run: |
-          # <dien code o day>
+          ACC=$(python -c "import json; d=json.load(open('outputs/metrics.json')); print(d['accuracy'])")
+          echo "accuracy=$ACC" >> $GITHUB_OUTPUT
+          echo "Accuracy vua doc duoc: $ACC"
+
+      - name: Compare with previous deployed model (Bonus 4 - rollback an toan)
+        # Doc metrics.json CU tren GCS TRUOC (neu co), so sanh voi accuracy MOI.
+        # Chi cho phep ghi de/deploy khi model moi >= model cu ve accuracy.
+        id: rollback_check
+        run: |
+          python - <<'EOF'
+          import json, os
+          from google.cloud import storage
+
+          bucket_name = os.environ["CLOUD_BUCKET"]
+          client = storage.Client()
+          bucket = client.bucket(bucket_name)
+
+          new_acc = json.load(open("outputs/metrics.json"))["accuracy"]
+          old_blob = bucket.blob("models/latest/metrics.json")
+
+          if old_blob.exists():
+              old_metrics = json.loads(old_blob.download_as_text())
+              old_acc = old_metrics.get("accuracy", 0.0)
+              print(f"Model dang chay: accuracy={old_acc:.4f} | Model moi vua train: accuracy={new_acc:.4f}")
+              should_deploy = new_acc >= old_acc
+          else:
+              print(f"Chua co model nao tren GCS. Model moi: accuracy={new_acc:.4f} -> cho phep deploy.")
+              should_deploy = True
+
+          print(f"should_deploy={should_deploy}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"should_deploy={'true' if should_deploy else 'false'}\n")
+          EOF
+        env:
+          CLOUD_BUCKET: ${{ secrets.CLOUD_BUCKET }}
 
       - name: Upload model to Cloud Storage
         # TODO 5: Su dung cloud SDK de upload models/model.pkl len
         #         <bucket>/models/latest/model.pkl.
         #         Ten bucket lay tu secret CLOUD_BUCKET.
+        # Bonus 4: chi upload (ghi de model dang chay) khi rollback_check cho phep.
+        if: steps.rollback_check.outputs.should_deploy == 'true'
         run: |
           python - <<'EOF'
-          # <dien code Python o day>
+          import os
+          from google.cloud import storage
+
+          bucket_name = os.environ["CLOUD_BUCKET"]
+          client = storage.Client()
+          bucket = client.bucket(bucket_name)
+
+          model_blob = bucket.blob("models/latest/model.pkl")
+          model_blob.upload_from_filename("models/model.pkl")
+          print(f"Da upload models/model.pkl len gs://{bucket_name}/models/latest/model.pkl")
+
+          metrics_blob = bucket.blob("models/latest/metrics.json")
+          metrics_blob.upload_from_filename("outputs/metrics.json")
+          print(f"Da upload outputs/metrics.json len gs://{bucket_name}/models/latest/metrics.json")
           EOF
+        env:
+          CLOUD_BUCKET: ${{ secrets.CLOUD_BUCKET }}
 
       - name: Save metrics as artifact
         uses: actions/upload-artifact@v4
@@ -126,7 +197,18 @@ jobs:
         #   print("PASSED: dang trien khai model.")
         run: |
           python - <<'EOF'
-          # <dien code Python o day>
+          acc = float("${{ needs.train.outputs.accuracy }}")
+          threshold = float("${{ github.event.inputs.threshold || '0.70' }}")
+          should_deploy = "${{ needs.train.outputs.should_deploy }}" == "true"
+
+          if acc < threshold:
+              raise SystemExit(f"FAILED: accuracy {acc:.4f} < {threshold:.4f}. Huy deploy.")
+          if not should_deploy:
+              raise SystemExit(
+                  f"BLOCKED: accuracy {acc:.4f} >= nguong {threshold:.4f} nhung khong tot hon "
+                  "model dang chay (Bonus 4 rollback safety). Huy deploy."
+              )
+          print(f"PASSED: accuracy {acc:.4f} >= {threshold:.4f} va tot hon model cu. Dang trien khai model.")
           EOF
 
 
@@ -156,4 +238,14 @@ jobs:
             #   sudo systemctl restart mlops-serve
             #   sleep 5
             #   curl -sf http://localhost:8000/health && echo "Health check passed." || exit 1
-            # <dien lenh bash o day>
+            sudo systemctl restart mlops-serve
+            for i in 1 2 3 4 5 6; do
+              sleep 5
+              if curl -sf http://localhost:8000/health; then
+                echo "Health check passed."
+                exit 0
+              fi
+              echo "Health check lan $i chua san sang, thu lai..."
+            done
+            echo "Health check that bai sau nhieu lan thu."
+            exit 1
