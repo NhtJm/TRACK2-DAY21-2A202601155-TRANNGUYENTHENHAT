@@ -323,4 +323,18 @@ Xem phần xử lý sự cố chi tiết trong từng file hướng dẫn:
 
 ---
 
+## Kết Quả Thực Hiện
+
+Báo cáo đầy đủ (kiến trúc, log CI thật, 15 thí nghiệm MLflow, 5 bonus, tự chấm rubric, nhật ký sự cố):
+[`docs/report.html`](docs/report.html) · Báo cáo ngắn: [`docs/BAO-CAO.md`](docs/BAO-CAO.md)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Params tốt nhất | `random_forest`, `n_estimators=300`, `max_depth=null`, `min_samples_split=2` |
+| Bước 2 (2998 mẫu) | accuracy 0.682 — Eval gate chặn deploy đúng thiết kế (< 0.70) |
+| Bước 3 (5996 mẫu) | accuracy 0.746 — 4 job CI xanh, deploy thành công, VM phục vụ `/predict` |
+| Bonus | Đa thuật toán, báo cáo tự động, rollback an toàn, cảnh báo drift: hoàn thành. DagsHub: đang chờ |
+
+---
+
 Bắt đầu: [Bước 1 - Thực nghiệm cục bộ](tasks/buoc-1.md)
