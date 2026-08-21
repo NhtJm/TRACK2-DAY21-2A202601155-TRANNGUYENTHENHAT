@@ -314,3 +314,35 @@ docs/
 - ✅ Firewall 8000 gắn `target-tags=mlops-serve`, không mở toàn project
 - ✅ Hỏi lại trước khi: tạo VM, xóa VM, force-push, hoặc bất kỳ thao tác không đảo ngược nào
 - ✅ Mọi commit đều đi qua nhánh/PR nếu bạn muốn review trước khi vào `main`
+
+---
+
+## 8. Chạy trên máy khác (portability)
+
+Hạ tầng cloud **không mất** khi đổi máy. Chỉ credential local là phải dựng lại.
+
+| Thứ | Đi theo git? | Máy mới cần làm gì |
+|---|---|---|
+| Code, `PLAN.md`, `HANDOFF-PROMPT.md` | ✅ | Không |
+| GCS bucket, GCE VM, IAM, GitHub Secrets | ✅ (ở trên cloud) | Không — **kiểm tra trước, đừng tạo trùng** |
+| `.dvc/config`, `data/*.dvc` | ✅ | Không |
+| `gcloud` token | ❌ `~/.config/gcloud` | `gcloud auth login` + `gcloud auth application-default login` + `gcloud config set project kis-check-aic` |
+| `gh` token | ❌ keyring | `gh auth login` (scope `repo` + `workflow`) |
+| **`sa-key.json`** | ❌ **`.gitignore`** | ⚠️ **Bẫy phổ biến nhất.** Tạo key mới:<br>`gcloud iam service-accounts keys create sa-key.json --iam-account mlops-lab-sa@kis-check-aic.iam.gserviceaccount.com` |
+| `~/.ssh/mlops_deploy` | ❌ | `ssh-keygen -t ed25519 -f ~/.ssh/mlops_deploy -N ""` → add pubkey vào VM → **cập nhật lại secret `VM_SSH_KEY`** |
+| `.venv`, `data/*.csv`, `mlflow.db`, `models/`, `outputs/` | ❌ | `pip install -r requirements.txt` + `dvc pull` (mlflow.db thì mất lịch sử run cũ — đây là lý do Bonus 1 DagsHub có giá trị thật) |
+
+**Script kiểm tra nhanh trên máy mới:**
+```bash
+python3 --version; git remote -v
+gcloud auth list 2>&1 | head -5; gcloud config get-value project
+gh auth status 2>&1 | head -5
+ls -la sa-key.json .dvc/config ~/.ssh/mlops_deploy 2>&1
+gsutil ls -p kis-check-aic 2>&1 | head
+gcloud compute instances list 2>&1 | head
+gh secret list
+```
+
+Nguyên tắc: **luôn kiểm tra trạng thái hạ tầng trước khi tạo mới**, tránh tạo trùng bucket/VM gây tốn phí và rối bằng chứng.
+
+> Prompt bàn giao đầy đủ cho phiên làm việc mới: xem `docs/HANDOFF-PROMPT.md`.
