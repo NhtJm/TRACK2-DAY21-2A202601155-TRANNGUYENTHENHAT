@@ -1,0 +1,38 @@
+=== 2026-08-21T10:39:34Z GD0: env check ===
+$ .venv/bin/python --version
+Python 3.10.21
+$ gcloud --version
+Google Cloud SDK 581.0.0
+bq 2.1.37
+bundled-python3-unix 3.14.6
+core 2026.08.14
+gcloud-crc32c 1.0.0
+gsutil 5.37
+$ gh --version
+gh version 2.98.0 (2026-08-20)
+https://github.com/cli/cli/releases/tag/v2.98.0
+$ git --version
+git version 2.53.0
+$ gcloud config list
+[core]
+account = nhatjames24.2004@gmail.com
+disable_usage_reporting = True
+project = kis-check-aic
+
+Your active configuration is: [default]
+$ gcloud auth list
+      Credentialed Accounts
+ACTIVE  ACCOUNT
+*       nhatjames24.2004@gmail.com
+
+To set the active account, run:
+    $ gcloud config set account `ACCOUNT`
+
+$ gh auth status
+github.com
+  ✓ Logged in to github.com account NhtJm (/home/nhat/.config/gh/hosts.yml)
+  - Active account: true
+  - Git operations protocol: https
+  - Token: gho_************************************
+  - Token scopes: 'gist', 'read:org', 'repo'
+OK: GD0 env check done

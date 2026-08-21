@@ -1,0 +1,7 @@
+=== 2026-08-21T10:51:19Z Test serve.py local (truoc khi len VM) ===
+$ curl -s http://127.0.0.1:8000/health
+{"status":"ok"}
+$ curl -s -X POST http://127.0.0.1:8000/predict -d {12 features mau}
+{"prediction":0,"label":"thap"}
+$ curl -s -X POST http://127.0.0.1:8000/predict -d {sai so luong feature, ky vong 400}
+HTTP_STATUS=400

@@ -1,0 +1,318 @@
+=== 2026-08-21T10:50:45Z GD4: local serve.py test truoc khi tao VM ===
+$ gsutil cp models/model.pkl gs://mlops-lab-260821-4173/models/latest/model.pkl
+Copying file://models/model.pkl [Content-Type=application/octet-stream]...
+/ [0 files][    0.0 B/ 32.8 MiB]                                                / [0 files][264.0 KiB/ 32.8 MiB]                                                -\\ [0 files][  1.3 MiB/ 32.8 MiB]                                                |// [0 files][  2.8 MiB/ 32.8 MiB]                                                -- [0 files][  4.9 MiB/ 32.8 MiB]                                                \|| [0 files][  7.5 MiB/ 32.8 MiB]                                                // [0 files][ 10.3 MiB/ 32.8 MiB]                                                -\\ [0 files][ 13.4 MiB/ 32.8 MiB]                                                |// [0 files][ 17.3 MiB/ 32.8 MiB]                                                -- [0 files][ 21.4 MiB/ 32.8 MiB]                                                \|| [0 files][ 25.5 MiB/ 32.8 MiB]                                                // [0 files][ 30.4 MiB/ 32.8 MiB]    3.9 MiB/s                                   -- [1 files][ 32.8 MiB/ 32.8 MiB]    3.8 MiB/s                                   \
+Operation completed over 1 objects/32.8 MiB.                                     
+$ gsutil ls gs://mlops-lab-260821-4173/models/latest/
+gs://mlops-lab-260821-4173/models/latest/model.pkl
+
+=== 2026-08-21T10:51:46Z GD4: tao VM + firewall ===
+$ gcloud compute firewall-rules create allow-mlops-serve --project=kis-check-aic --direction=INGRESS --action=ALLOW --rules=tcp:8000 --target-tags=mlops-serve --source-ranges=0.0.0.0/0 --description=Cho phep truy cap mlops-serve FastAPI tren port 8000
+Creating firewall...
+..Created [https://www.googleapis.com/compute/v1/projects/kis-check-aic/global/firewalls/allow-mlops-serve].
+done.
+NAME               NETWORK  DIRECTION  PRIORITY  ALLOW     DENY  DISABLED
+allow-mlops-serve  default  INGRESS    1000      tcp:8000        False
+$ gcloud compute instances create mlops-serve --project=kis-check-aic --zone=us-central1-a --machine-type=e2-small --image-family=ubuntu-2204-lts --image-project=ubuntu-os-cloud --tags=mlops-serve --boot-disk-size=20GB
+WARNING: You have selected a disk size of under [200GB]. This may result in poor I/O performance. For more information, see: https://developers.google.com/compute/docs/disks#performance.
+Created [https://www.googleapis.com/compute/v1/projects/kis-check-aic/zones/us-central1-a/instances/mlops-serve].
+WARNING: Some requests generated warnings:
+ - Disk size: '20 GB' is larger than image size: '10 GB'. You might need to resize the root repartition manually if the operating system does not support automatic resizing. See https://cloud.google.com/compute/docs/disks/add-persistent-disk#resize_pd for details.
+
+NAME         ZONE           MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP   STATUS
+mlops-serve  us-central1-a  e2-small                   10.128.0.2   35.239.63.30  RUNNING
+$ gcloud compute instances describe mlops-serve --zone=us-central1-a --format='value(status)'
+RUNNING
+$ gcloud compute instances describe mlops-serve --zone=us-central1-a --format='value(networkInterfaces[0].accessConfigs[0].natIP)'
+35.239.63.30
+OK: GD4 VM + firewall done
+
+=== 2026-08-21T10:52:25Z SSH cai dependencies tren VM ===
+$ gcloud compute ssh mlops-serve --zone=us-central1-a --command "..."
+WARNING: The private SSH key file for gcloud does not exist.
+WARNING: The public SSH key file for gcloud does not exist.
+WARNING: You do not have an SSH key for gcloud.
+WARNING: SSH keygen will be executed to generate a key.
+Generating public/private rsa key pair.
+Your identification has been saved in /home/nhat/.ssh/google_compute_engine
+Your public key has been saved in /home/nhat/.ssh/google_compute_engine.pub
+The key fingerprint is:
+SHA256:Qj3sWWDyeml/qPwde4E7nUe/K9WUTSXWfd7oZZWJX1c nhat@nhat-Zenbook-UP5401ZA-UP5401ZA
+The key's randomart image is:
++---[RSA 3072]----+
+|      . o     +.E|
+|       * .   o +O|
+|      . = .   .+O|
+|     . o =    .oB|
+|      o S    o +.|
+|       + . .. o.o|
+|          o oo.+.|
+|       . . oo++ o|
+|        o.. oo.+o|
++----[SHA256]-----+
+Updating project ssh metadata...
+......................................................Updated [https://www.googleapis.com/compute/v1/projects/kis-check-aic].
+...done.
+Waiting for SSH key to propagate.
+WARNING: 
+
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+
+Warning: Permanently added 'compute.2142180448743559968' (ED25519) to the list of known hosts.
+WARNING: 
+
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+
+Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+Hit:2 http://archive.ubuntu.com/ubuntu jammy InRelease
+Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+Get:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+Get:5 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [14.1 MB]
+Get:6 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [3483 kB]
+Get:7 http://archive.ubuntu.com/ubuntu jammy/universe Translation-en [5652 kB]
+Get:8 http://security.ubuntu.com/ubuntu jammy-security/main Translation-en [489 kB]
+Get:9 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [6239 kB]
+Get:10 http://archive.ubuntu.com/ubuntu jammy/universe amd64 c-n-f Metadata [286 kB]
+Get:11 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [217 kB]
+Get:12 http://archive.ubuntu.com/ubuntu jammy/multiverse Translation-en [112 kB]
+Get:13 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 c-n-f Metadata [8372 B]
+Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [3763 kB]
+Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/main Translation-en [560 kB]
+Get:16 http://security.ubuntu.com/ubuntu jammy-security/restricted Translation-en [1200 kB]
+Get:17 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [6496 kB]
+Get:18 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1047 kB]
+Get:19 http://security.ubuntu.com/ubuntu jammy-security/universe Translation-en [235 kB]
+Get:20 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 c-n-f Metadata [23.2 kB]
+Get:21 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [69.1 kB]
+Get:22 http://security.ubuntu.com/ubuntu jammy-security/multiverse Translation-en [12.9 kB]
+Get:23 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 c-n-f Metadata [544 B]
+Get:24 http://archive.ubuntu.com/ubuntu jammy-updates/restricted Translation-en [1246 kB]
+Get:25 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1281 kB]
+Get:26 http://archive.ubuntu.com/ubuntu jammy-updates/universe Translation-en [322 kB]
+Get:27 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 c-n-f Metadata [30.8 kB]
+Get:28 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [76.5 kB]
+Get:29 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse Translation-en [15.9 kB]
+Get:30 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 c-n-f Metadata [756 B]
+Get:31 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [70.2 kB]
+Get:32 http://archive.ubuntu.com/ubuntu jammy-backports/main Translation-en [11.4 kB]
+Get:33 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 c-n-f Metadata [412 B]
+Get:34 http://archive.ubuntu.com/ubuntu jammy-backports/restricted amd64 c-n-f Metadata [116 B]
+Get:35 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [30.8 kB]
+Get:36 http://archive.ubuntu.com/ubuntu jammy-backports/universe Translation-en [16.9 kB]
+Get:37 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 c-n-f Metadata [676 B]
+Get:38 http://archive.ubuntu.com/ubuntu jammy-backports/multiverse amd64 c-n-f Metadata [116 B]
+Fetched 47.5 MB in 10s (4777 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  python3-wheel
+Recommended packages:
+  build-essential python3-dev
+The following NEW packages will be installed:
+  python3-pip python3-wheel
+0 upgraded, 2 newly installed, 0 to remove and 6 not upgraded.
+Need to get 1338 kB of archives.
+After this operation, 7214 kB of additional disk space will be used.
+Get:1 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 python3-wheel all 0.37.1-2ubuntu0.22.04.1 [32.0 kB]
+Get:2 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 python3-pip all 22.0.2+dfsg-1ubuntu0.7 [1306 kB]
+debconf: unable to initialize frontend: Dialog
+debconf: (Dialog frontend will not work on a dumb terminal, an emacs shell buffer, or without a controlling terminal.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Teletype
+dpkg-preconfigure: unable to re-open stdin: 
+Fetched 1338 kB in 0s (7688 kB/s)
+Selecting previously unselected package python3-wheel.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 66818 files and directories currently installed.)
+Preparing to unpack .../python3-wheel_0.37.1-2ubuntu0.22.04.1_all.deb ...
+Unpacking python3-wheel (0.37.1-2ubuntu0.22.04.1) ...
+Selecting previously unselected package python3-pip.
+Preparing to unpack .../python3-pip_22.0.2+dfsg-1ubuntu0.7_all.deb ...
+Unpacking python3-pip (22.0.2+dfsg-1ubuntu0.7) ...
+Setting up python3-wheel (0.37.1-2ubuntu0.22.04.1) ...
+Setting up python3-pip (22.0.2+dfsg-1ubuntu0.7) ...
+Processing triggers for man-db (2.10.2-1) ...
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+Python 3.10.12
+pip 22.0.2 from /usr/lib/python3/dist-packages/pip (python 3.10)
+Collecting fastapi
+  Downloading fastapi-0.141.1-py3-none-any.whl (131 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 132.0/132.0 KB 3.2 MB/s eta 0:00:00
+Collecting uvicorn
+  Downloading uvicorn-0.52.4-py3-none-any.whl (79 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 79.9/79.9 KB 6.5 MB/s eta 0:00:00
+Collecting scikit-learn==1.4.2
+  Downloading scikit_learn-1.4.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.1/12.1 MB 19.7 MB/s eta 0:00:00
+Collecting joblib
+  Downloading joblib-1.5.3-py3-none-any.whl (309 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 309.1/309.1 KB 31.9 MB/s eta 0:00:00
+Collecting google-cloud-storage
+  Downloading google_cloud_storage-3.13.1-py3-none-any.whl (341 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 341.5/341.5 KB 32.0 MB/s eta 0:00:00
+Collecting scipy>=1.6.0
+  Downloading scipy-1.15.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (37.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 37.7/37.7 MB 15.4 MB/s eta 0:00:00
+Collecting threadpoolctl>=2.0.0
+  Downloading threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+Collecting numpy>=1.19.5
+  Downloading numpy-2.2.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (16.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.8/16.8 MB 28.5 MB/s eta 0:00:00
+Collecting annotated-doc>=0.0.2
+  Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Collecting starlette>=0.46.0
+  Downloading starlette-1.6.0-py3-none-any.whl (75 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 76.0/76.0 KB 10.1 MB/s eta 0:00:00
+Collecting typing-extensions>=4.8.0
+  Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.6/45.6 KB 6.2 MB/s eta 0:00:00
+Collecting pydantic>=2.9.0
+  Downloading pydantic-2.13.4-py3-none-any.whl (472 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 472.3/472.3 KB 44.4 MB/s eta 0:00:00
+Collecting typing-inspection>=0.4.2
+  Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Requirement already satisfied: click>=7.0 in /usr/lib/python3/dist-packages (from uvicorn) (8.0.3)
+Collecting h11>=0.8
+  Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Requirement already satisfied: requests<3.0.0,>=2.22.0 in /usr/lib/python3/dist-packages (from google-cloud-storage) (2.25.1)
+Collecting google-api-core<3.0.0,>=2.27.0
+  Downloading google_api_core-2.34.0-py3-none-any.whl (180 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 180.5/180.5 KB 20.4 MB/s eta 0:00:00
+Collecting google-resumable-media<3.0.0,>=2.7.2
+  Downloading google_resumable_media-2.10.1-py3-none-any.whl (81 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 81.5/81.5 KB 13.2 MB/s eta 0:00:00
+Collecting google-cloud-core<3.0.0,>=2.4.2
+  Downloading google_cloud_core-2.6.1-py3-none-any.whl (29 kB)
+Collecting google-crc32c<2.0.0,>=1.6.0
+  Downloading google_crc32c-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl (33 kB)
+Collecting google-auth<3.0.0,>=2.26.1
+  Downloading google_auth-2.56.3-py3-none-any.whl (259 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 259.1/259.1 KB 29.7 MB/s eta 0:00:00
+Collecting proto-plus<2.0.0,>=1.26.1
+  Downloading proto_plus-1.28.3-py3-none-any.whl (50 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.8/50.8 KB 7.3 MB/s eta 0:00:00
+Collecting protobuf<8.0.0,>=6.33.5
+  Downloading protobuf-7.36.0-cp310-abi3-manylinux2014_x86_64.whl (340 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 340.4/340.4 KB 33.4 MB/s eta 0:00:00
+Collecting googleapis-common-protos<2.0.0,>=1.69.2
+  Downloading googleapis_common_protos-1.75.1-py3-none-any.whl (300 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 300.6/300.6 KB 32.3 MB/s eta 0:00:00
+Collecting requests<3.0.0,>=2.22.0
+  Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.1/73.1 KB 10.4 MB/s eta 0:00:00
+Collecting cryptography>=38.0.3
+  Downloading cryptography-50.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 12.4 MB/s eta 0:00:00
+Requirement already satisfied: pyasn1-modules>=0.2.1 in /usr/lib/python3/dist-packages (from google-auth<3.0.0,>=2.26.1->google-cloud-storage) (0.2.1)
+Collecting annotated-types>=0.6.0
+  Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Collecting pydantic-core==2.46.4
+  Downloading pydantic_core-2.46.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 77.5 MB/s eta 0:00:00
+Requirement already satisfied: urllib3<3,>=1.26 in /usr/lib/python3/dist-packages (from requests<3.0.0,>=2.22.0->google-cloud-storage) (1.26.5)
+Collecting certifi>=2023.5.7
+  Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 137.0/137.0 KB 19.4 MB/s eta 0:00:00
+Collecting charset_normalizer<4,>=2
+  Downloading charset_normalizer-3.5.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (261 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 261.6/261.6 KB 32.2 MB/s eta 0:00:00
+Requirement already satisfied: idna<4,>=2.5 in /usr/lib/python3/dist-packages (from requests<3.0.0,>=2.22.0->google-cloud-storage) (3.3)
+Collecting anyio<5,>=3.6.2
+  Downloading anyio-4.14.2-py3-none-any.whl (125 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 125.8/125.8 KB 16.3 MB/s eta 0:00:00
+Collecting exceptiongroup>=1.0.2
+  Downloading exceptiongroup-1.3.1-py3-none-any.whl (16 kB)
+Collecting cffi>=2.0.0
+  Downloading cffi-2.1.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (218 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 218.7/218.7 KB 27.4 MB/s eta 0:00:00
+Collecting pycparser
+  Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.2/48.2 KB 6.9 MB/s eta 0:00:00
+Installing collected packages: typing-extensions, threadpoolctl, pycparser, protobuf, numpy, joblib, h11, google-crc32c, charset_normalizer, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, scipy, requests, pydantic-core, proto-plus, googleapis-common-protos, google-resumable-media, exceptiongroup, cffi, scikit-learn, pydantic, cryptography, anyio, starlette, google-auth, google-api-core, fastapi, google-cloud-core, google-cloud-storage
+  WARNING: The scripts f2py and numpy-config are installed in '/home/nhat/.local/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script normalizer is installed in '/home/nhat/.local/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script uvicorn is installed in '/home/nhat/.local/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script cffi-gen-src is installed in '/home/nhat/.local/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The script fastapi is installed in '/home/nhat/.local/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+Successfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.14.2 certifi-2026.7.22 cffi-2.1.1 charset_normalizer-3.5.1 cryptography-50.0.0 exceptiongroup-1.3.1 fastapi-0.141.1 google-api-core-2.34.0 google-auth-2.56.3 google-cloud-core-2.6.1 google-cloud-storage-3.13.1 google-crc32c-1.8.0 google-resumable-media-2.10.1 googleapis-common-protos-1.75.1 h11-0.16.0 joblib-1.5.3 numpy-2.2.6 proto-plus-1.28.3 protobuf-7.36.0 pycparser-3.0 pydantic-2.13.4 pydantic-core-2.46.4 requests-2.34.2 scikit-learn-1.4.2 scipy-1.15.3 starlette-1.6.0 threadpoolctl-3.6.0 typing-extensions-4.16.0 typing-inspection-0.4.4 uvicorn-0.52.4
+
+=== 2026-08-21T10:54:08Z scp sa-key.json + serve.py len VM ===
+WARNING: 
+
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+
+nhat
+$ gcloud compute scp sa-key.json mlops-serve:~/app/sa-key.json
+WARNING: 
+
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+
+$ gcloud compute scp src/serve.py mlops-serve:~/app/src/serve.py
+WARNING: 
+
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+
+$ gcloud compute scp src/__init__.py mlops-serve:~/app/src/__init__.py
+WARNING: 
+
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+
+
+=== 2026-08-21T10:54:54Z tao systemd unit mlops-serve.service ===
+WARNING: 
+
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+
+Created symlink /etc/systemd/system/multi-user.target.wants/mlops-serve.service → /etc/systemd/system/mlops-serve.service.
+enabled
+
+=== 2026-08-21T10:55:13Z them deploy key vao authorized_keys tren VM ===
+WARNING: 
+
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+
+3 /home/nhat/.ssh/authorized_keys
+
+=== 2026-08-21T10:55:36Z test SSH truc tiep bang deploy key (mo phong GitHub Actions) ===
+$ ssh -i ~/.ssh/mlops_deploy -o StrictHostKeyChecking=no nhat@35.239.63.30 "echo OK from VM; systemctl is-enabled mlops-serve"
+Warning: Permanently added '35.239.63.30' (ED25519) to the list of known hosts.
+OK from VM
+enabled
+
+=== 2026-08-21T10:55:46Z set 5 GitHub Secrets ===
+$ gh secret set CLOUD_CREDENTIALS < sa-key.json
+$ gh secret set CLOUD_BUCKET -b"mlops-lab-260821-4173"
+$ gh secret set VM_HOST -b"35.239.63.30"
+$ gh secret set VM_USER -b"nhat"
+$ gh secret set VM_SSH_KEY < ~/.ssh/mlops_deploy
+$ gh secret list
+CLOUD_BUCKET	2026-08-21T10:55:49Z
+CLOUD_CREDENTIALS	2026-08-21T10:55:47Z
+VM_HOST	2026-08-21T10:55:50Z
+VM_SSH_KEY	2026-08-21T10:55:52Z
+VM_USER	2026-08-21T10:55:51Z

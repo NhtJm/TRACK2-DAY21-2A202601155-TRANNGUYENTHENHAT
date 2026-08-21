@@ -1,0 +1,60 @@
+=== 2026-08-21T10:47:34Z GD3: GCS + DVC ===
+PROJECT=kis-check-aic BUCKET=mlops-lab-260821-4173 SA_EMAIL=mlops-lab-sa@kis-check-aic.iam.gserviceaccount.com
+$ gsutil mb -p kis-check-aic -l us-central1 gs://mlops-lab-260821-4173
+Creating gs://mlops-lab-260821-4173/...
+$ gcloud iam service-accounts create mlops-lab-sa --project=kis-check-aic --display-name=MLOps Lab pipeline service account
+Created service account [mlops-lab-sa].
+Service account email: mlops-lab-sa@kis-check-aic.iam.gserviceaccount.com
+$ gsutil iam ch serviceAccount:mlops-lab-sa@kis-check-aic.iam.gserviceaccount.com:objectAdmin gs://mlops-lab-260821-4173
+$ gcloud iam service-accounts keys create sa-key.json --iam-account=mlops-lab-sa@kis-check-aic.iam.gserviceaccount.com
+created key [5868ae5f0c5bb91abaa99d7ebba850ad60646ddf] of type [json] as [sa-key.json] for [mlops-lab-sa@kis-check-aic.iam.gserviceaccount.com]
+$ ls -la sa-key.json
+-rw------- 1 nhat nhat 2357 Aug 21 17:47 sa-key.json
+$ .venv/bin/dvc init
+Initialized DVC repository.
+
+You can now commit the changes to git.
+
++---------------------------------------------------------------------+
+|                                                                     |
+|        DVC has enabled anonymous aggregate usage analytics.         |
+|     Read the analytics documentation (and how to opt-out) here:     |
+|             <https://dvc.org/doc/user-guide/analytics>              |
+|                                                                     |
++---------------------------------------------------------------------+
+
+What's next?
+------------
+- Check out the documentation: <https://dvc.org/doc>
+- Get help and share ideas: <https://dvc.org/chat>
+- Star us on GitHub: <https://github.com/iterative/dvc>
+$ .venv/bin/dvc remote add -d myremote gs://mlops-lab-260821-4173/dvc
+Setting 'myremote' as a default remote.
+$ .venv/bin/dvc remote modify myremote credentialpath /home/nhat/Downloads/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT/sa-key.json
+$ .venv/bin/dvc add data/train_phase1.csv data/eval.csv data/train_phase2.csv
+
+To track the changes with git, run:
+
+	git add data/eval.csv.dvc data/train_phase2.csv.dvc data/train_phase1.csv.dvc
+
+To enable auto staging, run:
+
+	dvc config core.autostage true
+$ .venv/bin/dvc push
+3 files pushed
+$ gsutil ls -r gs://mlops-lab-260821-4173/dvc
+gs://mlops-lab-260821-4173/dvc/:
+
+gs://mlops-lab-260821-4173/dvc/files/:
+
+gs://mlops-lab-260821-4173/dvc/files/md5/:
+
+gs://mlops-lab-260821-4173/dvc/files/md5/4b/:
+gs://mlops-lab-260821-4173/dvc/files/md5/4b/1632d39f7ac6e7255e5a5116218e11
+
+gs://mlops-lab-260821-4173/dvc/files/md5/97/:
+gs://mlops-lab-260821-4173/dvc/files/md5/97/f98bd009dacc823e443313ab06597a
+
+gs://mlops-lab-260821-4173/dvc/files/md5/b5/:
+gs://mlops-lab-260821-4173/dvc/files/md5/b5/7623085e23c0c64f91d35cd627f73b
+OK: GD3 done

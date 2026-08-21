@@ -1,0 +1,16 @@
+=== Classification Report ===
+              precision    recall  f1-score   support
+
+        thap       0.69      0.74      0.71       173
+  trung_binh       0.65      0.69      0.67       227
+         cao       0.77      0.57      0.66       100
+
+    accuracy                           0.68       500
+   macro avg       0.70      0.67      0.68       500
+weighted avg       0.69      0.68      0.68       500
+
+
+=== Confusion Matrix (hang=thuc te, cot=du doan) ===
+128 43 2
+56 156 15
+2 41 57

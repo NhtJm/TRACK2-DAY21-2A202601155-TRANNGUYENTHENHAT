@@ -1,0 +1,16 @@
+run_id,model_type,n_estimators,max_depth,min_samples_split,class_weight,max_features,accuracy,f1_score
+7a5591a7,random_forest,100,5,2,,,0.564,0.5533560988979983
+8acc2e23,random_forest,50,3,2,,,0.558,0.518481053555571
+6998ac92,random_forest,200,10,5,,,0.644,0.6416822593730938
+b759a0ba,random_forest,300,None,2,,,0.682,0.6810790629331478
+033b11ca,random_forest,200,20,5,,,0.664,0.6621058851798287
+f45f6e6a,random_forest,500,None,2,,,0.676,0.6748089375284998
+5184456e,random_forest,400,None,2,,,0.674,0.6728708979401532
+c7cfc49c,gradient_boosting,200,5,2,,,0.674,0.6731252122802078
+6e675b3f,gradient_boosting,300,3,2,,,0.602,0.5997103751826137
+20e604f2,logistic_regression,100,5,2,,,0.568,0.5632179781738925
+5bc00f71,random_forest,300,None,2,,None,0.672,0.6704547629166414
+593ffafd,random_forest,300,None,2,balanced,,0.668,0.6662656798917379
+9cf758b0,random_forest,500,None,2,balanced_subsample,None,0.67,0.6683957216353587
+098b880e,random_forest,300,None,2,,None,0.626,0.6253110501855731
+68139d6a,random_forest,600,None,2,,log2,0.678,0.6768828729860458

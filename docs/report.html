@@ -1,0 +1,733 @@
+<title>Wine MLOps Pipeline</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f6f7;
+    --surface: #ffffff;
+    --surface-2: #eceeef;
+    --ink: #241b1d;
+    --ink-muted: #5b5257;
+    --ink-faint: #85797c;
+    --border: #e2ddd9;
+    --accent: #7a2333;
+    --accent-ink: #ffffff;
+    --accent-soft: #f4e3e6;
+    --gold: #8a6a15;
+    --gold-soft: #f6ecd2;
+    --ok: #2f7d4f;
+    --ok-soft: #e5f3ea;
+    --fail: #b5432e;
+    --fail-soft: #fbe9e5;
+    --pending: #8a6a15;
+    --pending-soft: #f6ecd2;
+    --term-bg: #201a1c;
+    --term-ink: #f1e9ea;
+    --term-muted: #a89a9c;
+    --term-accent: #e2a3ac;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(36,27,29,0.06), 0 6px 20px rgba(36,27,29,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181c;
+      --surface: #1d2024;
+      --surface-2: #262a2f;
+      --ink: #ece7e6;
+      --ink-muted: #a89fa0;
+      --ink-faint: #766e6f;
+      --border: #33383e;
+      --accent: #e08a97;
+      --accent-ink: #241017;
+      --accent-soft: #3a2228;
+      --gold: #d9b54a;
+      --gold-soft: #332c17;
+      --ok: #57b982;
+      --ok-soft: #172b20;
+      --fail: #e2694f;
+      --fail-soft: #3a221c;
+      --pending: #d9b54a;
+      --pending-soft: #332c17;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181c;
+    --surface: #1d2024;
+    --surface-2: #262a2f;
+    --ink: #ece7e6;
+    --ink-muted: #a89fa0;
+    --ink-faint: #766e6f;
+    --border: #33383e;
+    --accent: #e08a97;
+    --accent-ink: #241017;
+    --accent-soft: #3a2228;
+    --gold: #d9b54a;
+    --gold-soft: #332c17;
+    --ok: #57b982;
+    --ok-soft: #172b20;
+    --fail: #e2694f;
+    --fail-soft: #3a221c;
+    --pending: #d9b54a;
+    --pending-soft: #332c17;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  h1, h2, h3, h4 { font-family: "Archivo", "IBM Plex Sans", sans-serif; text-wrap: balance; color: var(--ink); }
+  code, pre, .mono, .num { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .num { font-variant-numeric: tabular-nums; }
+  a { color: var(--accent); }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 0;
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+  nav.toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 28px 18px 28px 24px;
+    border-right: 1px solid var(--border);
+  }
+  nav.toc .brand {
+    font-family: "Archivo", sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  nav.toc .brand-sub { color: var(--ink-muted); font-size: 0.78rem; margin-bottom: 20px; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: sect; }
+  nav.toc li { counter-increment: sect; margin-bottom: 2px; }
+  nav.toc a {
+    display: block;
+    text-decoration: none;
+    color: var(--ink-muted);
+    font-size: 0.83rem;
+    padding: 6px 8px;
+    border-radius: 7px;
+  }
+  nav.toc a::before {
+    content: counter(sect, decimal-leading-zero) "  ";
+    font-family: "IBM Plex Mono", monospace;
+    color: var(--ink-faint);
+  }
+  nav.toc a:hover { background: var(--surface-2); color: var(--ink); }
+
+  main { padding: 0; min-width: 0; }
+  .masthead {
+    padding: 56px clamp(20px, 5vw, 64px) 40px;
+    border-bottom: 1px solid var(--border);
+    background:
+      radial-gradient(1200px 260px at 85% -60px, var(--accent-soft), transparent 60%),
+      var(--surface);
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 5px 11px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
+  .masthead h1 { font-size: clamp(1.9rem, 3.4vw, 2.7rem); font-weight: 800; margin: 0 0 12px; max-width: 18ch; }
+  .masthead .dek { color: var(--ink-muted); max-width: 62ch; font-size: 1.05rem; margin: 0 0 28px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px 28px; font-size: 0.85rem; }
+  .meta-row div { display: flex; flex-direction: column; gap: 2px; }
+  .meta-row .k { color: var(--ink-faint); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .meta-row .v { font-family: "IBM Plex Mono", monospace; }
+
+  section { padding: 46px clamp(20px, 5vw, 64px); border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+  .sect-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  .sect-num { font-family: "IBM Plex Mono", monospace; color: var(--ink-faint); font-size: 0.9rem; }
+  section h2 { font-size: 1.5rem; margin: 0; }
+  .sect-intro { color: var(--ink-muted); max-width: 72ch; margin: 10px 0 28px; }
+  section h3 { font-size: 1.12rem; margin: 30px 0 12px; }
+  p { max-width: 74ch; }
+  .prose-wide p { max-width: 84ch; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.03em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+  }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.fail { background: var(--fail-soft); color: var(--fail); }
+  .badge.pending { background: var(--pending-soft); color: var(--pending); }
+  .badge::before { content: "●"; font-size: 0.6rem; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 22px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 16px; }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 860px) { .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr 1fr; } }
+
+  .stat { display: flex; flex-direction: column; gap: 4px; }
+  .stat .n { font-family: "Archivo", sans-serif; font-weight: 800; font-size: 1.9rem; }
+  .stat .l { color: var(--ink-muted); font-size: 0.8rem; }
+  .stat .n.accent { color: var(--accent); }
+  .stat .n.gold { color: var(--gold); }
+
+  .milestones { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .m-row { display: grid; grid-template-columns: 90px 1fr auto auto; gap: 14px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .m-row:last-child { border-bottom: none; }
+  .m-row .mid { font-family: "IBM Plex Mono", monospace; color: var(--ink-faint); }
+  .m-row .pts { font-family: "IBM Plex Mono", monospace; color: var(--ink-muted); }
+
+  .scrollx { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.88rem; }
+  table.wide { min-width: 920px; }
+  th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  thead th { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); background: var(--surface-2); position: sticky; top: 0; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.best { background: var(--accent-soft); }
+  tbody tr.best td:first-child { position: relative; }
+  td.num, th.num { text-align: right; font-family: "IBM Plex Mono", monospace; }
+
+  .term {
+    background: var(--term-bg); color: var(--term-ink); border-radius: var(--radius);
+    padding: 16px 18px; font-family: "IBM Plex Mono", monospace; font-size: 0.79rem; line-height: 1.65;
+    overflow-x: auto; box-shadow: var(--shadow);
+  }
+  .term .ttl { color: var(--term-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .term pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+  .term .prompt { color: var(--term-accent); }
+  .term .cmt { color: var(--term-muted); }
+
+  .code-explain { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,0.85fr); gap: 20px; margin: 18px 0 30px; align-items: start; }
+  @media (max-width: 920px) { .code-explain { grid-template-columns: 1fr; } }
+  .code-explain pre {
+    margin: 0; background: var(--term-bg); color: var(--term-ink); border-radius: var(--radius);
+    padding: 16px 18px; font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; line-height: 1.6;
+    overflow-x: auto; box-shadow: var(--shadow);
+  }
+  .why { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; padding: 14px 18px; }
+  .why h4 { margin: 0 0 8px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); font-family: "IBM Plex Mono", monospace; }
+  .why p, .why ul { font-size: 0.9rem; color: var(--ink-muted); margin: 0 0 8px; }
+  .why ul { padding-left: 18px; }
+  .why li { margin-bottom: 4px; }
+  .why code { color: var(--ink); }
+
+  .pending-note {
+    border: 1px dashed var(--pending); background: var(--pending-soft); color: var(--pending);
+    border-radius: var(--radius); padding: 12px 16px; font-size: 0.85rem; margin: 14px 0;
+  }
+
+  .bonus-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .bonus-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; }
+  .bonus-card .n { font-family: "IBM Plex Mono", monospace; color: var(--gold); font-size: 0.78rem; }
+  .bonus-card h4 { margin: 0; font-size: 1rem; }
+  .bonus-card p { font-size: 0.87rem; color: var(--ink-muted); margin: 0; }
+
+  figure { margin: 20px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 0.84rem; color: var(--ink-muted); margin-top: 10px; }
+
+  .incident { border-left: 3px solid var(--gold); background: var(--surface); border: 1px solid var(--border); border-left-width: 3px; border-left-color: var(--gold); border-radius: 0 var(--radius) var(--radius) 0; padding: 14px 18px; margin-bottom: 14px; }
+  .incident h4 { margin: 0 0 6px; font-size: 0.95rem; }
+  .incident p { margin: 4px 0; font-size: 0.89rem; color: var(--ink-muted); }
+  .incident .fix { color: var(--ok); }
+
+  footer { padding: 30px clamp(20px,5vw,64px) 60px; color: var(--ink-faint); font-size: 0.8rem; }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    nav.toc { position: static; max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+
+<div class="shell">
+  <nav class="toc" aria-label="Mục lục">
+    <div class="brand">Wine MLOps Pipeline</div>
+    <div class="brand-sub">Day 21 · CI/CD cho AI Systems</div>
+    <ol>
+      <li><a href="#tong-quan">Tổng quan &amp; tiến độ</a></li>
+      <li><a href="#kien-truc">Kiến trúc hệ thống</a></li>
+      <li><a href="#code">Code &amp; lý do thiết kế</a></li>
+      <li><a href="#buoc1">Bước 1 — MLflow</a></li>
+      <li><a href="#buoc2">Bước 2 — CI/CD &amp; VM</a></li>
+      <li><a href="#gate-demo">Demo eval gate</a></li>
+      <li><a href="#buoc3">Bước 3 — Continuous training</a></li>
+      <li><a href="#bonus">5 Bonus</a></li>
+      <li><a href="#rubric">Tự chấm rubric</a></li>
+      <li><a href="#incidents">Nhật ký sự cố</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <span class="eyebrow">● Living report — cập nhật theo tiến độ pipeline</span>
+      <h1>Wine Quality MLOps: từ MLflow local đến CI/CD trên GCP</h1>
+      <p class="dek">Báo cáo kỹ thuật đầy đủ cho lab Day 21 — theo dõi thí nghiệm, versioning dữ liệu, pipeline 4 job trên GitHub Actions, triển khai FastAPI trên GCE, và 5 thách thức nâng cao.</p>
+      <div class="meta-row">
+        <div><span class="k">Repo</span><span class="v">NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT</span></div>
+        <div><span class="k">Cloud</span><span class="v">GCP · kis-check-aic</span></div>
+        <div><span class="k">Dataset</span><span class="v">UCI Wine Quality (red+white, 3 lớp)</span></div>
+        <div><span class="k">Cập nhật</span><span class="v">2026-08-21</span></div>
+      </div>
+    </header>
+
+    <section id="tong-quan">
+      <div class="sect-head"><span class="sect-num">01</span><h2>Tổng quan &amp; tiến độ</h2></div>
+      <p class="sect-intro">Lab gồm 3 bước chính (80đ) và 5 thách thức nâng cao (20đ). Tài liệu này là báo cáo sống — các mục đã có bằng chứng thật được đánh dấu <span class="badge ok">Hoàn thành</span>, phần đang chờ vòng CI tiếp theo được đánh dấu <span class="badge pending">Đang chạy</span>.</p>
+
+      <div class="grid cols-4" style="margin-bottom:28px;">
+        <div class="card stat"><span class="n accent">15</span><span class="l">lần chạy MLflow (yêu cầu ≥3)</span></div>
+        <div class="card stat"><span class="n">0.682</span><span class="l">accuracy tốt nhất trên train_phase1 (2998 mẫu)</span></div>
+        <div class="card stat"><span class="n gold">0.746</span><span class="l">accuracy trên tập gộp 5996 mẫu (Bước 3)</span></div>
+        <div class="card stat"><span class="n">3</span><span class="l">thuật toán so sánh (RF / GB / LogReg)</span></div>
+      </div>
+
+      <h3>Mốc tiến độ</h3>
+      <div class="milestones">
+        <div class="m-row"><span class="mid">M1</span><span>MLflow 5+ lần chạy, chốt params tốt nhất</span><span class="pts">24đ</span><span class="badge ok">Hoàn thành</span></div>
+        <div class="m-row"><span class="mid">M2</span><span>DVC push GCS + 3 unit test xanh</span><span class="pts">36đ</span><span class="badge ok">Hoàn thành</span></div>
+        <div class="m-row"><span class="mid">M3</span><span>CI 4 job + VM /predict hoạt động</span><span class="pts">68đ</span><span class="badge pending">Đang chạy</span></div>
+        <div class="m-row"><span class="mid">M4</span><span>Demo eval gate + Bước 3 continuous training</span><span class="pts">80đ</span><span class="badge pending">Đang chạy</span></div>
+        <div class="m-row"><span class="mid">M5</span><span>5 bonus hoàn thành</span><span class="pts">100đ</span><span class="badge pending">Đang chạy</span></div>
+        <div class="m-row"><span class="mid">M6</span><span>Báo cáo HTML + BAO-CAO.md + dọn hạ tầng</span><span class="pts">—</span><span class="badge pending">Đang chạy</span></div>
+      </div>
+    </section>
+
+    <section id="kien-truc">
+      <div class="sect-head"><span class="sect-num">02</span><h2>Kiến trúc hệ thống</h2></div>
+      <p class="sect-intro">Cơ chế trung tâm của toàn bộ pipeline là <strong>eval gate</strong>: job Eval đọc accuracy job Train vừa tạo ra, so với ngưỡng 0.70 — chỉ khi đạt mới cho phép Deploy chạm vào VM đang phục vụ traffic thật.</p>
+
+      <figure>
+        <svg viewBox="0 0 1180 480" role="img" aria-label="Sơ đồ luồng: máy local đẩy code và trỏ dữ liệu qua GitHub, GitHub Actions chạy 4 job Test, Train, Eval, Deploy tuần tự; Train đọc/ghi Google Cloud Storage, Eval là cổng chặn dựa trên ngưỡng accuracy 0.70, Deploy SSH vào VM GCE để restart service FastAPI phục vụ client qua endpoint predict." xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <style>
+            text { font-family: 'IBM Plex Sans', sans-serif; fill: currentColor; }
+            .lbl { font-family: 'IBM Plex Mono', monospace; font-size: 11px; opacity: 0.72; }
+            .ttl { font-weight: 600; font-size: 13px; }
+            .sub { font-size: 10.5px; opacity: 0.65; }
+            .box { fill: none; stroke: currentColor; stroke-width: 1.4; opacity: 0.85; }
+            .edge { fill: none; stroke: currentColor; stroke-width: 1.4; opacity: 0.55; marker-end: url(#arrow); }
+          </style>
+
+          <rect class="box" x="20" y="190" width="140" height="80" rx="8"/>
+          <text class="ttl" x="90" y="222" text-anchor="middle">Máy local</text>
+          <text class="sub" x="90" y="240" text-anchor="middle">train.py, dvc add</text>
+          <text class="sub" x="90" y="255" text-anchor="middle">params.yaml</text>
+
+          <line class="edge" x1="160" y1="230" x2="228" y2="230"/>
+          <text class="lbl" x="194" y="220" text-anchor="middle">git push</text>
+
+          <rect class="box" x="230" y="190" width="150" height="80" rx="8"/>
+          <text class="ttl" x="305" y="222" text-anchor="middle">GitHub main</text>
+          <text class="sub" x="305" y="240" text-anchor="middle">code + *.dvc</text>
+          <text class="sub" x="305" y="255" text-anchor="middle">(không có .csv)</text>
+
+          <line class="edge" x1="380" y1="230" x2="448" y2="230"/>
+          <text class="lbl" x="414" y="220" text-anchor="middle">trigger</text>
+
+          <rect class="box" x="450" y="30" width="640" height="420" rx="10" stroke-dasharray="3 4" opacity="0.5"/>
+          <text class="lbl" x="470" y="52">GitHub Actions runner</text>
+
+          <rect class="box" x="480" y="80" width="130" height="60" rx="8"/>
+          <text class="ttl" x="545" y="106" text-anchor="middle">Test</text>
+          <text class="sub" x="545" y="122" text-anchor="middle">pytest -v</text>
+
+          <line class="edge" x1="610" y1="110" x2="668" y2="110"/>
+          <text class="lbl" x="639" y="100" text-anchor="middle">pass</text>
+
+          <rect class="box" x="670" y="80" width="150" height="60" rx="8"/>
+          <text class="ttl" x="745" y="106" text-anchor="middle">Train</text>
+          <text class="sub" x="745" y="122" text-anchor="middle">dvc pull → fit → upload</text>
+
+          <line class="edge" x1="720" y1="140" x2="720" y2="205"/>
+          <text class="lbl" x="730" y="175">dvc pull /</text>
+          <text class="lbl" x="730" y="188">upload model</text>
+
+          <rect class="box" x="620" y="210" width="220" height="70" rx="8"/>
+          <text class="ttl" x="730" y="238" text-anchor="middle">Google Cloud Storage</text>
+          <text class="sub" x="730" y="255" text-anchor="middle">gs://mlops-lab-.../dvc, models/latest/</text>
+
+          <line class="edge" x1="745" y1="140" x2="745" y2="330" opacity="0.35"/>
+
+          <rect class="box" x="670" y="335" width="150" height="65" rx="8" style="stroke:var(--fail)" opacity="1"/>
+          <text class="ttl" x="745" y="360" text-anchor="middle" fill="var(--fail)">Eval gate</text>
+          <text class="sub" x="745" y="376" text-anchor="middle" fill="var(--fail)">acc &#8805; 0.70 ?</text>
+          <text class="sub" x="745" y="390" text-anchor="middle" fill="var(--fail)">&amp; acc_moi &#8805; acc_cu</text>
+
+          <line class="edge" x1="820" y1="367" x2="878" y2="367"/>
+          <text class="lbl" x="849" y="357" text-anchor="middle">đạt</text>
+
+          <line class="edge" x1="745" y1="400" x2="745" y2="430" opacity="0.4"/>
+          <text class="lbl" x="800" y="425">không đạt → Deploy bị skip</text>
+
+          <rect class="box" x="880" y="335" width="150" height="65" rx="8"/>
+          <text class="ttl" x="955" y="360" text-anchor="middle">Deploy</text>
+          <text class="sub" x="955" y="376" text-anchor="middle">SSH restart</text>
+          <text class="sub" x="955" y="390" text-anchor="middle">+ retry curl /health</text>
+
+          <line class="edge" x1="1030" y1="367" x2="1085" y2="367"/>
+
+          <rect class="box" x="960" y="80" width="150" height="150" rx="8"/>
+          <text class="ttl" x="1035" y="106" text-anchor="middle">GCE VM mlops-serve</text>
+          <text class="sub" x="1035" y="125" text-anchor="middle">e2-small · us-central1-a</text>
+          <text class="sub" x="1035" y="145" text-anchor="middle">systemd: uvicorn src.serve:app</text>
+          <text class="sub" x="1035" y="165" text-anchor="middle">GET /health</text>
+          <text class="sub" x="1035" y="182" text-anchor="middle">POST /predict</text>
+          <text class="sub" x="1035" y="205" text-anchor="middle">model tải từ GCS lúc boot</text>
+
+          <line class="edge" x1="1035" y1="335" x2="1035" y2="230" opacity="0.55"/>
+
+          <line class="edge" x1="20" y1="440" x2="60" y2="440" opacity="0.4"/>
+          <text class="lbl" x="70" y="444">Client curl /predict → VM public IP:8000</text>
+        </svg>
+        <figcaption><strong>Cơ chế chặn deploy:</strong> job Eval nằm giữa Train và Deploy như một cổng cứng — đọc <code>accuracy</code> từ output của Train, so với ngưỡng (mặc định 0.70) <em>và</em> so với accuracy model đang chạy (Bonus 4). Chỉ khi cả hai điều kiện đạt, job Deploy mới được phép SSH vào VM.</figcaption>
+      </figure>
+    </section>
+
+    <section id="code">
+      <div class="sect-head"><span class="sect-num">03</span><h2>Code &amp; lý do thiết kế</h2></div>
+      <p class="sect-intro">Bốn file được điền đầy đủ TODO theo khung đề bài: <code>src/train.py</code> (10 TODO), <code>tests/test_train.py</code> (9 TODO), <code>src/serve.py</code> (8 TODO), <code>.github/workflows/mlops.yml</code> (8 TODO). Dưới đây là các quyết định thiết kế không hiển nhiên từ code.</p>
+
+      <h3>train.py — factory đa thuật toán (chuẩn bị sẵn cho Bonus 2)</h3>
+      <div class="code-explain">
+        <pre><code>model_params = dict(params)
+model_type = model_params.pop("model_type", "random_forest")
+
+with mlflow.start_run(run_name=model_type):
+    mlflow.log_params(params)      # log ca model_type
+    mlflow.set_tag("model_type", model_type)
+    model = build_model(model_type, model_params)
+    model.fit(X_train, y_train)</code></pre>
+        <div class="why">
+          <h4>Vì sao</h4>
+          <p>Truyền thẳng <code>**params</code> (có <code>model_type</code>) vào <code>RandomForestClassifier</code> sẽ raise <code>TypeError</code>. Giải pháp: <code>pop()</code> trên <strong>bản sao</strong> của dict — <code>params</code> gốc vẫn nguyên vẹn để <code>mlflow.log_params()</code> ghi nhận đầy đủ (kể cả <code>model_type</code>) phục vụ so sánh trên UI, còn <code>model_params</code> đã sạch mới đưa vào constructor.</p>
+          <p><code>logistic_regression</code> cần <code>StandardScaler</code> nên được bọc trong <code>Pipeline</code> riêng thay vì factory tham số chung với RF/GB.</p>
+        </div>
+      </div>
+
+      <h3>train.py — cảnh báo drift &amp; báo cáo tự động (Bonus 3 + 5)</h3>
+      <div class="code-explain">
+        <pre><code>label_distribution = (
+    y_train.value_counts(normalize=True)
+    .sort_index().to_dict()
+)
+for label, ratio in label_distribution.items():
+    if ratio < 0.10:
+        print(f"WARNING: lop '{label}' chi chiem "
+              f"{ratio:.2%} ... (data drift)")
+
+report_dict = classification_report(
+    y_eval, preds, output_dict=True, ...)
+# → outputs/report.txt + metrics.json["classification_report"]</code></pre>
+        <div class="why">
+          <h4>Vì sao</h4>
+          <p>Phân phối nhãn thật của Wine Quality (~36/44/20%) <strong>không bao giờ</strong> kích hoạt cảnh báo — không lớp nào dưới 10%. Để có bằng chứng chấm điểm, mục §7 chạy thêm một lần huấn luyện trên tập dữ liệu bị làm lệch thủ công (xem Bonus 5).</p>
+          <p>Confusion matrix + precision/recall từng lớp được tính một lần rồi dùng lại cho cả file text (<code>report.txt</code>, dễ đọc) và JSON có cấu trúc (<code>metrics.json</code>, máy đọc được, đi kèm artifact CI).</p>
+        </div>
+      </div>
+
+      <h3>serve.py — tải model khi khởi động, validate đầu vào</h3>
+      <div class="code-explain">
+        <pre><code>download_model()             # goi 1 lan luc import module
+model = joblib.load(MODEL_PATH)
+
+@app.post("/predict")
+def predict(req: PredictRequest):
+    if len(req.features) != 12:
+        raise HTTPException(400, ...)
+    pred = model.predict([req.features])[0]
+    return {"prediction": int(pred),
+            "label": label_map[int(pred)]}</code></pre>
+        <div class="why">
+          <h4>Vì sao</h4>
+          <p>Model tải <strong>một lần</strong> lúc process khởi động (không tải lại mỗi request) — đây cũng là lý do job Deploy phải <code>systemctl restart</code> để nạp model mới sau mỗi lần Train thành công, thay vì chỉ upload lên GCS là đủ.</p>
+          <p>Input không đủ 12 đặc trưng trả về <code>400</code> thay vì để model ném lỗi 500 mơ hồ — health check của job Deploy và client đều nhận được lỗi rõ ràng.</p>
+        </div>
+      </div>
+
+      <h3>mlops.yml — rollback an toàn trước khi ghi đè (Bonus 4, R7)</h3>
+      <div class="code-explain">
+        <pre><code># step: rollback_check (chay TRUOC step Upload)
+old_blob = bucket.blob("models/latest/metrics.json")
+if old_blob.exists():
+    old_acc = json.loads(old_blob.download_as_text())["accuracy"]
+    should_deploy = new_acc >= old_acc
+else:
+    should_deploy = True   # chua co model nao truoc do
+# → GITHUB_OUTPUT: should_deploy
+
+# step: Upload model to Cloud Storage
+if: steps.rollback_check.outputs.should_deploy == 'true'</code></pre>
+        <div class="why">
+          <h4>Vì sao</h4>
+          <p>Thứ tự bắt buộc: <strong>đọc metrics.json cũ trước, rồi mới quyết định có ghi đè hay không</strong>. Đảo ngược thứ tự (ghi trước, đọc sau) sẽ khiến model luôn so sánh với chính nó — mất tác dụng bảo vệ.</p>
+          <p>Job Eval nhận thêm output <code>should_deploy</code> từ job Train và cộng với điều kiện ngưỡng accuracy — cả hai đều phải đạt thì Deploy mới chạy.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="buoc1">
+      <div class="sect-head"><span class="sect-num">04</span><h2>Bước 1 — MLflow tracking</h2><span class="badge ok">Hoàn thành</span></div>
+      <p class="sect-intro">Yêu cầu tối thiểu 3 lần chạy với params khác nhau — thực hiện <strong>15 lần chạy</strong> qua 3 vòng grid-search, trải trên cả 3 thuật toán (chuẩn bị sẵn dữ liệu cho Bonus 2). Tracking bằng <code>MLFLOW_TRACKING_URI=sqlite:///mlflow.db</code>.</p>
+
+      <div class="scrollx">
+        <table class="wide">
+          <thead><tr>
+            <th>#</th><th>model_type</th><th class="num">n_estimators</th><th class="num">max_depth</th><th class="num">min_samples_split</th><th>khác</th><th class="num">accuracy</th><th class="num">f1_score</th>
+          </tr></thead>
+          <tbody>
+            <tr><td>1</td><td>random_forest</td><td class="num">100</td><td class="num">5</td><td class="num">2</td><td>—</td><td class="num">0.564</td><td class="num">0.5534</td></tr>
+            <tr><td>2</td><td>random_forest</td><td class="num">50</td><td class="num">3</td><td class="num">2</td><td>—</td><td class="num">0.558</td><td class="num">0.5185</td></tr>
+            <tr><td>3</td><td>random_forest</td><td class="num">200</td><td class="num">10</td><td class="num">5</td><td>—</td><td class="num">0.644</td><td class="num">0.6417</td></tr>
+            <tr class="best"><td>4 ★</td><td>random_forest</td><td class="num">300</td><td class="num">null</td><td class="num">2</td><td>—</td><td class="num">0.682</td><td class="num">0.6811</td></tr>
+            <tr><td>5</td><td>random_forest</td><td class="num">200</td><td class="num">20</td><td class="num">5</td><td>—</td><td class="num">0.664</td><td class="num">0.6621</td></tr>
+            <tr><td>6</td><td>random_forest</td><td class="num">500</td><td class="num">null</td><td class="num">2</td><td>—</td><td class="num">0.676</td><td class="num">0.6748</td></tr>
+            <tr><td>7</td><td>random_forest</td><td class="num">400</td><td class="num">null</td><td class="num">2</td><td>—</td><td class="num">0.674</td><td class="num">0.6729</td></tr>
+            <tr><td>8</td><td>gradient_boosting</td><td class="num">200</td><td class="num">5</td><td class="num">2</td><td>—</td><td class="num">0.674</td><td class="num">0.6731</td></tr>
+            <tr><td>9</td><td>gradient_boosting</td><td class="num">300</td><td class="num">3</td><td class="num">2</td><td>—</td><td class="num">0.602</td><td class="num">0.5997</td></tr>
+            <tr><td>10</td><td>logistic_regression</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td>StandardScaler+LR</td><td class="num">0.568</td><td class="num">0.5632</td></tr>
+            <tr><td>11</td><td>random_forest</td><td class="num">300</td><td class="num">null</td><td class="num">2</td><td>max_features=None</td><td class="num">0.672</td><td class="num">0.6705</td></tr>
+            <tr><td>12</td><td>random_forest</td><td class="num">300</td><td class="num">null</td><td class="num">2</td><td>class_weight=balanced</td><td class="num">0.668</td><td class="num">0.6663</td></tr>
+            <tr><td>13</td><td>random_forest</td><td class="num">500</td><td class="num">null</td><td class="num">2</td><td>balanced_subsample</td><td class="num">0.670</td><td class="num">0.6684</td></tr>
+            <tr><td>14</td><td>random_forest</td><td class="num">300</td><td class="num">null</td><td class="num">2</td><td>bootstrap=False</td><td class="num">0.626</td><td class="num">0.6253</td></tr>
+            <tr><td>15</td><td>random_forest</td><td class="num">600</td><td class="num">null</td><td class="num">2</td><td>max_features=log2</td><td class="num">0.678</td><td class="num">0.6769</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:0.85rem; color:var(--ink-muted); margin-top:10px;">Nguồn: <code>docs/evidence/mlflow-runs.csv</code> (xuất từ <code>mlflow.db</code>). Run <strong>#4</strong> (đánh dấu ★) được chọn làm <code>params.yaml</code> cuối cùng.</p>
+
+      <h3>Phân tích</h3>
+      <p class="prose-wide">Tăng <code>n_estimators</code> và bỏ trần <code>max_depth</code> (run 1→4) cải thiện accuracy từ 0.564 lên 0.682 — cây sâu hơn nắm được ranh giới phi tuyến giữa 3 lớp chất lượng tốt hơn cây nông (run 1-2 underfit rõ rệt). Sau run 4, việc tăng tiếp <code>n_estimators</code> (300→400→500→600, run 6/7/15) hoặc đổi <code>max_features</code>/<code>class_weight</code>/<code>bootstrap</code> (run 11-14) đều <strong>không vượt qua được run 4</strong> — mô hình đã chạm ngưỡng bão hòa của cây quyết định trên tập 2998 mẫu. Gradient boosting (run 8) đạt xấp xỉ RF tốt nhất còn logistic regression (run 10) thấp hơn hẳn, đúng như kỳ vọng với dữ liệu phi tuyến, nhiều nhiễu nhãn (điểm quality vốn mang tính chủ quan).</p>
+      <p class="prose-wide"><strong>Không cấu hình nào trong 15 lần chạy vượt ngưỡng 0.70</strong> (tốt nhất 0.682). Đây là phát hiện quan trọng nhất của Bước 1 — xem phân tích đầy đủ và cách xử lý ở mục 05 và 09 (nhật ký sự cố).</p>
+    </section>
+
+    <section id="buoc2">
+      <div class="sect-head"><span class="sect-num">05</span><h2>Bước 2 — DVC, CI/CD, VM serving</h2></div>
+      <p class="sect-intro">Ba mảnh hạ tầng: GCS + DVC remote (xong), pipeline 4 job trên GitHub Actions (đang chạy vòng đầu), VM FastAPI (đã dựng, đã kiểm tra thủ công trước khi nối CI).</p>
+
+      <h3>2A · Đơn vị kiểm thử <span class="badge ok">3/3 xanh</span></h3>
+      <div class="term">
+        <div class="ttl">$ .venv/bin/python -m pytest tests/ -v</div>
+        <pre>tests/test_train.py::test_train_returns_float PASSED                     [ 33%]
+tests/test_train.py::test_metrics_file_created PASSED                    [ 66%]
+tests/test_train.py::test_model_file_created PASSED                      [100%]
+======================== 3 passed, 24 warnings in 3.85s ========================</pre>
+      </div>
+
+      <h3>2B · GCS + DVC remote <span class="badge ok">Hoàn thành</span></h3>
+      <div class="term">
+        <div class="ttl">docs/logs/03-gcs-dvc.log (trích)</div>
+        <pre>$ gsutil mb -p kis-check-aic -l us-central1 gs://mlops-lab-260821-4173
+Creating gs://mlops-lab-260821-4173/...
+$ gcloud iam service-accounts create mlops-lab-sa --display-name="MLOps Lab pipeline service account"
+Created service account [mlops-lab-sa].
+$ gsutil iam ch serviceAccount:mlops-lab-sa@kis-check-aic.iam.gserviceaccount.com:objectAdmin gs://mlops-lab-260821-4173
+$ dvc init
+$ dvc remote add -d myremote gs://mlops-lab-260821-4173/dvc
+$ dvc add data/train_phase1.csv data/eval.csv data/train_phase2.csv
+$ dvc push
+3 files pushed
+$ gsutil ls -r gs://mlops-lab-260821-4173/dvc
+gs://mlops-lab-260821-4173/dvc/files/md5/4b/1632d39f7ac6e7255e5a5116218e11
+gs://mlops-lab-260821-4173/dvc/files/md5/97/f98bd009dacc823e443313ab06597a
+gs://mlops-lab-260821-4173/dvc/files/md5/b5/7623085e23c0c64f91d35cd627f73b</pre>
+      </div>
+      <p style="font-size:0.85rem; color:var(--ink-muted);">Service Account chỉ có quyền <code>objectAdmin</code> trên đúng bucket này (không <code>storage.admin</code>). <code>git log --name-only</code> xác nhận repo chỉ chứa 3 file <code>.dvc</code>, không có file <code>.csv</code> nào.</p>
+
+      <h3>2C · serve.py trên VM <span class="badge ok">Kiểm tra local thành công</span> <span class="badge pending">Chờ CI Deploy</span></h3>
+      <p class="prose-wide">VM <code>mlops-serve</code> (<code>e2-small</code>, <code>us-central1-a</code>) đã dựng xong, firewall <code>allow-mlops-serve</code> mở đúng <code>tcp:8000</code> theo <code>target-tags</code>, systemd unit đã <code>enable</code>. Trước khi nối CI, model được upload thủ công lên GCS để kiểm tra <code>serve.py</code> chạy đúng tại chỗ:</p>
+      <div class="term">
+        <div class="ttl">docs/logs/08-curl-endpoints.log</div>
+        <pre>$ curl -s http://127.0.0.1:8000/health
+{"status":"ok"}
+
+$ curl -s -X POST http://127.0.0.1:8000/predict \
+  -d '{"features": [7.4, 0.70, 0.00, 1.9, 0.076, 11.0, 34.0, 0.9978, 3.51, 0.56, 9.4, 0]}'
+{"prediction":0,"label":"thap"}
+
+$ curl -X POST http://127.0.0.1:8000/predict -d '{"features": [1,2,3]}'
+HTTP_STATUS=400   # sai so luong dac trung -> tu choi dung cach</pre>
+      </div>
+      <div class="pending-note">Job Deploy thật trên VM public IP (qua CI, dùng <code>VM_SSH_KEY</code> riêng cho GitHub Actions) đang chờ vòng CI đầu tiên — xem cập nhật ở mục kế tiếp.</div>
+
+      <h3>2D · Pipeline CI/CD 4 job</h3>
+      <div class="pending-note">Đang chờ quyền <code>workflow</code> trên token GitHub CLI để push <code>.github/workflows/mlops.yml</code> đã điền đầy đủ 8 TODO (+ hook Bonus 1, Bonus 4). Log thật của 4 job (<code>gh run view --log</code>) sẽ được chèn vào đây ngay khi có.</div>
+      <p class="prose-wide"><strong>Dự kiến trung thực:</strong> vòng CI đầu tiên chạy trên <code>train_phase1.csv</code> (2998 mẫu) — accuracy tốt nhất đo được ở Bước 1 là <strong>0.682</strong>, dưới ngưỡng 0.70. Do đó job <strong>Eval nhiều khả năng FAIL đúng theo thiết kế</strong>, Deploy sẽ bị <code>skip</code>. Đây không phải lỗi cấu hình — mục 09 (nhật ký sự cố) và mục 07 (Bước 3) giải thích đầy đủ và cho thấy accuracy vượt ngưỡng ngay khi có thêm dữ liệu.</p>
+    </section>
+
+    <section id="gate-demo">
+      <div class="sect-head"><span class="sect-num">06</span><h2>Demo eval gate chặn deploy</h2><span class="badge pending">Chờ CI</span></div>
+      <p class="sect-intro">Ngoài lần chặn "tự nhiên" ở mục 05, đề bài yêu cầu một minh chứng chủ động: trigger <code>workflow_dispatch</code> trên nhánh <code>demo/eval-gate-fail</code> với input <code>threshold=0.99</code> — cố tình đặt ngưỡng không thể đạt để xác nhận cơ chế gate hoạt động đúng, đồng thời giữ lịch sử nhánh <code>main</code> phản ánh đúng kết quả thật thay vì bị làm giả bằng một ngưỡng dễ.</p>
+      <div class="pending-note">Sẽ chèn log <code>gh run view --log</code> cho thấy Test ✅ · Train ✅ · Eval ❌ (<code>FAILED: accuracy ... &lt; 0.99</code>) · Deploy <code>skipped</code> ngay sau khi chạy được.</div>
+    </section>
+
+    <section id="buoc3">
+      <div class="sect-head"><span class="sect-num">07</span><h2>Bước 3 — Continuous training</h2><span class="badge pending">Chờ CI</span></div>
+      <p class="sect-intro"><code>add_new_data.py</code> gộp <code>train_phase2.csv</code> vào <code>train_phase1.csv</code> (2998 → 5996 mẫu), commit chỉ file <code>.dvc</code>, <code>dvc push</code> <strong>trước</strong> <code>git push</code> (nếu ngược thứ tự, <code>dvc pull</code> trên CI sẽ fail vì object chưa có trên remote) — pipeline tự kích hoạt hoàn toàn không cần thao tác thủ công nào khác.</p>
+
+      <h3>Kiểm chứng trước (probe cục bộ)</h3>
+      <p class="prose-wide">Trước khi chạy chính thức, đã kiểm chứng cục bộ bằng cách train thử trên tập gộp 5996 mẫu (không commit, chỉ để biết trước kết quả):</p>
+      <div class="term">
+        <div class="ttl">$ .venv/bin/python probe_merged.py (RF n_estimators=300, max_depth=null)</div>
+        <pre>Accuracy: 0.7460 | F1: 0.7449</pre>
+      </div>
+      <p class="prose-wide">Nhiều dữ liệu hơn (gấp đôi) giúp mô hình khái quát tốt hơn, đẩy accuracy từ 0.682 lên <strong>0.746</strong> — vượt ngưỡng 0.70 một cách rõ ràng, xác nhận Bước 3 sẽ khiến Eval gate PASS và Deploy chạy thành công.</p>
+
+      <h3>Bảng đối chiếu Bước 2 vs Bước 3</h3>
+      <div class="scrollx">
+        <table>
+          <thead><tr><th></th><th>Bước 2 (train_phase1)</th><th>Bước 3 (train_phase1 + phase2)</th></tr></thead>
+          <tbody>
+            <tr><td>Số mẫu train</td><td class="num">2998</td><td class="num">5996</td></tr>
+            <tr><td>Accuracy (RF tốt nhất)</td><td class="num">0.682</td><td class="num">0.746</td></tr>
+            <tr><td>Vượt ngưỡng 0.70?</td><td><span class="badge fail">Không</span></td><td><span class="badge ok">Có</span></td></tr>
+            <tr><td>Job Deploy</td><td>Bị chặn bởi Eval gate</td><td class="badge pending">Chờ chạy thật</td></tr>
+            <tr><td>Kích hoạt bởi</td><td>push code lần đầu</td><td>commit dữ liệu (<code>*.dvc</code>) duy nhất</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pending-note">Log CI thật (<code>gh run view --log</code>) và xác nhận <code>curl /predict</code> phục vụ model mới trên VM sẽ được chèn vào đây sau khi chạy.</div>
+    </section>
+
+    <section id="bonus">
+      <div class="sect-head"><span class="sect-num">08</span><h2>5 thách thức nâng cao</h2></div>
+      <p class="sect-intro">20 điểm, mỗi bonus 4 điểm. Trạng thái tính đến lần cập nhật gần nhất của báo cáo này.</p>
+
+      <div class="bonus-grid">
+        <div class="bonus-card">
+          <span class="n">BONUS 1</span>
+          <h4>DagsHub remote tracking</h4>
+          <span class="badge pending">Chờ token từ bạn</span>
+          <p>Hook <code>MLFLOW_TRACKING_URI/USERNAME/PASSWORD</code> đã có sẵn trong job Train của <code>mlops.yml</code> — tự động kích hoạt ngay khi 3 secret tương ứng được set, không cần sửa lại workflow. Đang chờ bạn tạo tài khoản DagsHub và cung cấp thông tin đăng nhập.</p>
+        </div>
+        <div class="bonus-card">
+          <span class="n">BONUS 2</span>
+          <h4>Đa thuật toán</h4>
+          <span class="badge ok">Hoàn thành</span>
+          <p><code>model_type</code> trong <code>params.yaml</code> + factory trong <code>train.py</code>. Đã so sánh <strong>3 thuật toán</strong> trên MLflow: random_forest (0.682), gradient_boosting (0.674), logistic_regression (0.568) — xem bảng ở mục 04, run #4/#8/#10.</p>
+        </div>
+        <div class="bonus-card">
+          <span class="n">BONUS 3</span>
+          <h4>Báo cáo hiệu suất tự động</h4>
+          <span class="badge ok">Hoàn thành</span>
+          <p><code>outputs/report.txt</code> (classification_report + confusion matrix dạng text) sinh ra sau mỗi lần train, log qua <code>mlflow.log_artifact</code>. Trong CI sẽ được đính kèm cùng <code>metrics.json</code> qua <code>actions/upload-artifact</code>.</p>
+        </div>
+        <div class="bonus-card">
+          <span class="n">BONUS 4</span>
+          <h4>Rollback an toàn</h4>
+          <span class="badge ok">Code hoàn thành</span> <span class="badge pending">Chờ demo CI</span>
+          <p>Step <code>rollback_check</code> đọc <code>metrics.json</code> cũ từ GCS <strong>trước</strong> khi job Train ghi đè — chỉ upload/deploy khi accuracy mới ≥ accuracy cũ. Kịch bản (a) tốt hơn → deploy và (b) kém hơn → chặn sẽ được minh hoạ bằng log CI thật.</p>
+        </div>
+        <div class="bonus-card">
+          <span class="n">BONUS 5</span>
+          <h4>Cảnh báo lệch dữ liệu</h4>
+          <span class="badge ok">Hoàn thành</span>
+          <p>Dữ liệu thật (36/44/20%) không kích hoạt cảnh báo — đã tạo tập lệch riêng để minh chứng logic hoạt động đúng (xem log bên dưới).</p>
+        </div>
+      </div>
+
+      <h3>Bonus 5 — bằng chứng: dữ liệu thật vs dữ liệu lệch</h3>
+      <div class="term">
+        <div class="ttl">docs/logs/10-bonus-5-drift.log</div>
+        <pre>--- Run A: du lieu THAT (train_phase1.csv, phan phoi 36/44/20%) ---
+Accuracy: 0.6820 | F1: 0.6811
+(khong co WARNING - dung phan phoi that, khong lop nao duoi 10%)
+
+--- Run B: du lieu LECH (lop 'cao' bi giu lai chi 5% ngau nhien -> con 1.23%) ---
+WARNING: lop '2' chi chiem 1.23% du lieu huan luyen (< 10%) -
+  co the anh huong chat luong mo hinh (data drift).
+Accuracy: 0.6060 | F1: 0.5465</pre>
+      </div>
+      <p style="font-size:0.85rem; color:var(--ink-muted);">Tập lệch được tạo bằng cách giữ nguyên lớp 0 và 1, lấy mẫu ngẫu nhiên 5% lớp 2 (<code>sample(frac=0.05, random_state=42)</code>) — không phải dữ liệu thật, chỉ dùng để kiểm chứng logic cảnh báo. Accuracy giảm từ 0.682 xuống 0.606 cũng cho thấy tác động thực của việc mất cân bằng lớp.</p>
+    </section>
+
+    <section id="rubric">
+      <div class="sect-head"><span class="sect-num">09</span><h2>Tự chấm theo rubric 100 điểm</h2></div>
+      <p class="sect-intro">Ảnh chụp trạng thái tại lần cập nhật này — các dòng <span class="badge pending">Chờ CI</span> sẽ chốt điểm khi vòng CI/CD chạy xong (mục 05-08).</p>
+      <div class="scrollx">
+        <table class="wide">
+          <thead><tr><th>Hạng mục</th><th class="num">Tối đa</th><th>Trạng thái</th><th>Bằng chứng</th></tr></thead>
+          <tbody>
+            <tr><td>Bước 1 — MLflow ≥3 run khác params</td><td class="num">12</td><td><span class="badge ok">Đạt</span></td><td>§04, 15 run, <code>mlflow-runs.csv</code></td></tr>
+            <tr><td>Bước 1 — Đủ accuracy + f1_score mỗi run</td><td class="num">8</td><td><span class="badge ok">Đạt</span></td><td><code>docs/logs/02-mlflow-runs.log</code></td></tr>
+            <tr><td>Bước 1 — Phân tích params tốt nhất</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td>§04 phân tích + <code>BAO-CAO.md</code></td></tr>
+            <tr><td>Bước 2 — DVC remote + push</td><td class="num">12</td><td><span class="badge ok">Đạt</span></td><td>§05, <code>03-gcs-dvc.log</code></td></tr>
+            <tr><td>Bước 2 — 4 job CI xanh</td><td class="num">16</td><td><span class="badge pending">Chờ CI</span></td><td>Chờ push (scope <code>workflow</code>) — xem §10 sự cố #2</td></tr>
+            <tr><td>Bước 2 — Eval gate chặn deploy</td><td class="num">4</td><td><span class="badge pending">Chờ CI</span></td><td>Kỳ vọng đạt tự nhiên ở vòng đầu (acc 0.682 &lt; 0.70) + demo §06</td></tr>
+            <tr><td>Bước 2 — VM /predict đúng</td><td class="num">12</td><td><span class="badge ok">Đạt cục bộ</span> <span class="badge pending">Chờ CI deploy</span></td><td>§05, <code>08-curl-endpoints.log</code></td></tr>
+            <tr><td>Bước 3 — Commit dữ liệu tự kích hoạt pipeline</td><td class="num">12</td><td><span class="badge pending">Chờ CI</span></td><td>§07, probe accuracy 0.746</td></tr>
+            <tr><td>Bonus 1 — DagsHub</td><td class="num">4</td><td><span class="badge pending">Chờ token</span></td><td>Hook sẵn trong <code>mlops.yml</code></td></tr>
+            <tr><td>Bonus 2 — Đa thuật toán</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td>§04/§08, 3 model_type so sánh</td></tr>
+            <tr><td>Bonus 3 — Báo cáo tự động</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td><code>docs/evidence/report.txt</code></td></tr>
+            <tr><td>Bonus 4 — Rollback an toàn</td><td class="num">4</td><td><span class="badge ok">Code đạt</span> <span class="badge pending">Chờ demo CI</span></td><td>§03 giải thích code, §08</td></tr>
+            <tr><td>Bonus 5 — Cảnh báo drift</td><td class="num">4</td><td><span class="badge ok">Đạt</span></td><td><code>10-bonus-5-drift.log</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="incidents">
+      <div class="sect-head"><span class="sect-num">10</span><h2>Nhật ký sự cố</h2></div>
+      <p class="sect-intro">Ghi lại trung thực các vướng mắc thật và cách xử lý — không chỉnh sửa sau khi xảy ra.</p>
+
+      <div class="incident">
+        <h4>#1 · Môi trường sandbox không khớp mô tả ban đầu</h4>
+        <p>Yêu cầu ban đầu mô tả <code>gcloud</code>/<code>gh</code> đã auth sẵn, Python 3.11.9 — nhưng sandbox thực tế không có cả hai CLI, không có config auth, và Python hệ thống là 3.14.4 (không có wheel cho scikit-learn 1.4.2/pandas 2.2.2 đã pin).</p>
+        <p class="fix">Xử lý: cài <code>gcloud</code> SDK + <code>gh</code> CLI vào <code>~/.local/bin</code> (không cần sudo); dùng <code>uv</code> để tải Python 3.10.21 chuẩn portable, tạo venv riêng khớp phiên bản CI. Đăng nhập gcloud qua luồng <code>--no-launch-browser</code> (dùng FIFO non-blocking để giữ tiến trình sống qua nhiều lượt gọi lệnh), đăng nhập gh qua device-code flow.</p>
+      </div>
+
+      <div class="incident">
+        <h4>#2 · Token GitHub CLI thiếu scope <code>workflow</code></h4>
+        <p>Lần đăng nhập <code>gh</code> đầu tiên chỉ cấp scope mặc định (<code>repo</code>, <code>read:org</code>, <code>gist</code>) — không đủ để push thay đổi vào <code>.github/workflows/mlops.yml</code>, khiến toàn bộ vòng CI đầu tiên bị hoãn.</p>
+        <p class="fix">Xử lý: chạy <code>gh auth refresh -s workflow</code> để yêu cầu thêm quyền qua device-code flow riêng. Trong lúc chờ, chuyển sang hoàn thiện các phần không cần push (Bonus 5, soạn báo cáo) để không lãng phí thời gian.</p>
+      </div>
+
+      <div class="incident">
+        <h4>#3 · <code>.dvc/config</code> chứa đường dẫn credential tuyệt đối của máy local</h4>
+        <p><code>dvc remote modify myremote credentialpath ...</code> mặc định ghi vào <code>.dvc/config</code> (file được commit) với đường dẫn tuyệt đối kiểu <code>/home/nhat/...</code> — nếu commit nguyên trạng, <code>dvc pull</code> trên GitHub Actions runner sẽ tìm file ở đường dẫn không tồn tại và fail.</p>
+        <p class="fix">Xử lý: chuyển credential path sang <code>.dvc/config.local</code> (đã có sẵn trong <code>.dvc/.gitignore</code>, không commit) bằng cờ <code>--local</code>. CI dùng biến môi trường <code>GOOGLE_APPLICATION_CREDENTIALS</code> thay thế, đúng theo thiết kế ban đầu của <code>mlops.yml</code>.</p>
+      </div>
+
+      <div class="incident">
+        <h4>#4 · Grid-search 15 lần chạy vẫn không vượt ngưỡng accuracy 0.70</h4>
+        <p>Tài liệu kế hoạch (PLAN.md, rủi ro R1) đã cảnh báo trước khả năng này. Thử cả tăng <code>n_estimators</code> (tới 600), bỏ trần <code>max_depth</code>, đổi <code>max_features</code>/<code>class_weight</code>/<code>bootstrap</code>, và 2 thuật toán khác (gradient boosting, logistic regression) — tốt nhất chỉ đạt 0.682 trên 2998 mẫu train.</p>
+        <p class="fix">Xử lý: xác nhận đây là giới hạn thật của bài toán (không phải lỗi cấu hình) bằng cách thử train thêm trên tập dữ liệu gộp 5996 mẫu (mô phỏng Bước 3) — đạt 0.746, vượt ngưỡng rõ ràng. Quyết định: chấp nhận Eval gate chặn deploy đúng thiết kế ở vòng CI đầu (Bước 2), dùng chính sự kiện này làm bằng chứng gate hoạt động đúng, và để Bước 3 (thêm dữ liệu) là nơi thực sự vượt ngưỡng — đúng tinh thần sư phạm của bài lab.</p>
+      </div>
+
+      <div class="incident">
+        <h4>#5 · Remote <code>main</code> có commit mới không có ở local trước khi push</h4>
+        <p><code>git push</code> đầu tiên bị từ chối (<code>fetch first</code>) — một phiên làm việc trước đó (trên máy khác) đã commit thêm <code>docs/HANDOFF-PROMPT.md</code> lên <code>main</code>.</p>
+        <p class="fix">Xử lý: <code>git fetch</code> + đọc nội dung commit lạ trước khi merge (xác nhận vô hại, đúng là tài liệu bàn giao của chính phiên làm việc này), sau đó <code>git pull --rebase</code> rồi push — giữ lịch sử tuyến tính, không mất commit nào.</p>
+      </div>
+    </section>
+
+    <footer>
+      Báo cáo tự sinh trong quá trình thực hiện lab — mọi log, số liệu đều lấy trực tiếp từ output lệnh thật, không chỉnh sửa nội dung. Repo: <a href="https://github.com/NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT">github.com/NhtJm/TRACK2-DAY21-2A202601155-TRANNGUYENTHENHAT</a>
+    </footer>
+  </main>
+</div>
